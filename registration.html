@@ -1,32 +1,19 @@
-<!DOCTYPE html>
-<html lang="bn">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><title>ProyojonX - Step 1</title><link rel="stylesheet" href="registration.css"></head>
-<body>
+<!DOCTYPE html><html lang="bn"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ProyojonX</title><link rel="stylesheet" href="registration.css"></head><body>
 <div class="page-frame"></div>
-<div class="top-wrap">
-<div class="card-logo"><img src="logo-full.png" alt="ProyojonX" loading="lazy"><button id="voiceBtn" class="voice-pill">🔇 Voice: OFF</button></div>
-</div>
-<div class="card-reg">
-<h2><span class="hl">রেজিস্ট্রেশন করুন</span></h2>
+<button id="voiceBtn" class="voice-3d">🔇 Voice: OFF</button>
+<div class="hero-full"><img src="https://i.ibb.co/6XQ6h3y/proyojonx-logo.png" onerror="this.src='data:image/svg+xml;base64,[STRIPPED]'" alt="ProyojonX"></div>
+<div class="card-3d">
+<h2><span>রেজিস্ট্রেশন করুন</span></h2>
 <p class="sub">কোটি মানুষের জন্য সহজ</p>
-
 <label class="label">মোবাইল নম্বর</label>
-<div class="input3d"><div class="pre">+880</div><input id="mobile" type="tel" inputmode="numeric" maxlength="10" placeholder="1XXXXXXXXXX" autocomplete="tel"></div>
-<button id="sendOtp" class="btn3d orange">📲 OTP পাঠান</button>
-
-<div id="otpSec" class="hide">
-<p class="label" style="margin-top:14px">OTP কোড (ডেমো: 123456)</p>
-<div class="otp-boxes"><input class="otp" inputmode="numeric" maxlength="1"><input class="otp" inputmode="numeric" maxlength="1"><input class="otp" inputmode="numeric" maxlength="1"><input class="otp" inputmode="numeric" maxlength="1"><input class="otp" inputmode="numeric" maxlength="1"><input class="otp" inputmode="numeric" maxlength="1"></div>
-<button id="verifyOtp" class="btn3d yellow">OTP কনফার্ম করুন ✅</button>
-<p id="otpMsg" class="msg"></p>
-</div>
-
-<label class="label" style="margin-top:14px">লোকেশন (ঐচ্ছিক)</label>
-<div class="input3d"><input id="location" type="text" placeholder="আপনার এলাকা" autocomplete="off"><button id="locBtn" class="mini-3d">📍</button></div>
-
-<button id="register" class="btn3d green" disabled>রেজিস্ট্রেশন সম্পন্ন করুন</button>
+<div class="input-3d"><span class="prefix">+880</span><input id="mobile" type="tel" maxlength="10" placeholder="1XXXXXXXXXX"></div>
+<button id="sendOtp" class="btn-3d orange">📲 OTP পাঠান</button>
+<div id="otpSection"><label class="label">OTP কোড (ডেমো: 123456)</label><div class="otp-boxes"><input class="otp" maxlength="1"><input class="otp" maxlength="1"><input class="otp" maxlength="1"><input class="otp" maxlength="1"><input class="otp" maxlength="1"><input class="otp" maxlength="1"></div></div>
+<label class="label">লোকেশন (ঐচ্ছিক)</label>
+<div class="input-3d"><input id="location" type="text" placeholder="আপনার এলাকা"><button id="locBtn" class="mini-3d">📍</button></div>
+<button id="register" class="btn-3d green">✅ রেজিস্ট্রেশন সম্পন্ন করুন</button>
 <p id="msg" class="msg"></p>
+<p style="font-size:10px;color:#888;margin-top:8px;font-weight:700">রেজিস্ট্রেশন করে আপনি আমাদের শর্তাবলী মেনে নিচ্ছেন</p>
 </div>
 <script src="registration.js"></script>
-</body>
-</html>
+</body></html>
