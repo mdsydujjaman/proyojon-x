@@ -1,0 +1,4906 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProyojonX - Dashboard</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+    margin:0;
+    font-family:Arial,sans-serif;
+    background:#f4f7f6;
+    color:#222;
+}
+.header{
+    background:#087f5b;
+    color:white;
+    padding:18px;
+}
+.header h1{margin:0 0 6px}
+.container{
+    max-width:700px;
+    margin:auto;
+    padding:15px;
+}
+.card{
+    background:white;
+    padding:18px;
+    margin:12px 0;
+    border-radius:14px;
+    box-shadow:0 2px 8px #0001;
+}
+input,select,textarea,button{
+    width:100%;
+    padding:12px;
+    margin:6px 0 12px;
+    border-radius:8px;
+    border:1px solid #ccc;
+    font-size:15px;
+}
+button{
+    background:#087f5b;
+    color:white;
+    border:0;
+    font-weight:bold;
+}
+.logout{background:#c92a2a}
+.request{
+    border:1px solid #ddd;
+    padding:12px;
+    border-radius:10px;
+    margin-top:10px;
+}
+.status{
+    font-weight:bold;
+    color:#087f5b;
+}
+.hidden{display:none}
+.message{
+    font-weight:bold;
+    padding:8px 0;
+}
+
+/* ========================================
+   ProyojonX - 3D Buttons
+   ======================================== */
+
+.btn-3d,
+button {
+    border: 0;
+    border-radius: 12px;
+    padding: 13px 16px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transform: translateY(0);
+    box-shadow:
+        0 5px 0 #075c42,
+        0 7px 12px rgba(0,0,0,0.18);
+    transition:
+        transform 0.08s ease,
+        box-shadow 0.08s ease;
+}
+
+.btn-3d:active,
+button:active {
+    transform: translateY(4px);
+    box-shadow:
+        0 1px 0 #075c42,
+        0 3px 6px rgba(0,0,0,0.15);
+}
+
+button.logout,
+.logout {
+    box-shadow:
+        0 5px 0 #8f1e1e,
+        0 7px 12px rgba(0,0,0,0.18);
+}
+
+
+.main-choice-buttons{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+    margin:18px 0;
+}
+
+.main-choice-btn{
+    width:100%;
+    min-height:105px;
+    padding:14px;
+    border:0;
+    border-radius:16px;
+    color:white;
+    cursor:pointer;
+    font-weight:bold;
+    background:#087f5b;
+    box-shadow:0 6px 0 #075c42,0 10px 18px rgba(0,0,0,.18);
+    transition:transform .08s ease,box-shadow .08s ease;
+}
+
+.main-choice-btn:active{
+    transform:translateY(5px);
+    box-shadow:0 1px 0 #075c42,0 4px 8px rgba(0,0,0,.15);
+}
+
+.main-choice-icon{
+    display:block;
+    font-size:30px;
+    margin-bottom:5px;
+}
+
+.main-choice-bn{
+    display:block;
+    font-size:18px;
+    line-height:1.35;
+}
+
+.main-choice-en{
+    display:block;
+    font-size:12px;
+    font-weight:normal;
+    margin-top:4px;
+}
+</style>
+
+</head>
+
+<body>
+
+<!-- ==================================================
+     PROYOJONX V1 - MY MATCHES
+     ================================================== -->
+
+<section id="myMatchesSection" style="
+    margin:20px 0;
+    padding:16px;
+    border-radius:14px;
+    background:#ffffff;
+    box-shadow:0 2px 10px rgba(0,0,0,.08);
+">
+
+    <h2 style="margin-top:0;">
+        🤝 আমার Match (My Matches)
+    </h2>
+
+    <div id="myMatchesList">
+        <p>Match লোড হচ্ছে...</p>
+    </div>
+
+</section>
+
+
+<script>
+
+async function loadMyMatches() {
+
+    const container =
+        document.getElementById("myMatchesList");
+
+    if (!container) return;
+
+    try {
+
+        const response =
+            await fetch("/api/matches/my");
+
+        const data =
+            await response.json();
+
+        if (!data.success) {
+            container.innerHTML =
+                "<p>❌ Match লোড করা যায়নি।</p>";
+            return;
+        }
+
+        if (
+            !Array.isArray(data.matches) ||
+            data.matches.length === 0
+        ) {
+            container.innerHTML =
+                "<p>এখনো কোনো Match নেই।</p>";
+            return;
+        }
+
+        container.innerHTML =
+            data.matches.map(match => {
+
+                const requesterName =
+                    match.requester?.name || "Requester";
+
+                const providerName =
+                    match.provider?.name || "Provider";
+
+                let statusText = "";
+
+                if (match.status === "pending") {
+                    statusText =
+                        "⏳ অপেক্ষমাণ (Pending)";
+                }
+
+                else if (match.status === "accepted") {
+                    statusText =
+                        "🤝 গৃহীত (Accepted)";
+                }
+
+                else if (match.status === "confirmed") {
+                    statusText =
+                        "✅ নিশ্চিত (Confirmed)";
+                }
+
+                else if (match.status === "completed") {
+                    statusText =
+                        "🏁 সম্পন্ন (Completed)";
+                }
+
+                else if (match.status === "rejected") {
+                    statusText =
+                        "❌ প্রত্যাখ্যাত (Rejected)";
+                }
+
+                else if (match.status === "cancelled") {
+                    statusText =
+                        "🚫 বাতিল (Cancelled)";
+                }
+
+                else {
+                    statusText =
+                        match.status || "Unknown";
+                }
+
+                let actionHTML = "";
+
+                // ------------------------------------------
+                // ACCEPT
+                // ------------------------------------------
+
+                if (
+                    match.status === "pending" &&
+                    match.requester?._id === window.currentUserId
+                ) {
+
+                    actionHTML += `
+                        <button
+                            onclick="acceptMyMatch('${match._id}')"
+                            style="
+                                padding:10px 14px;
+                                margin:5px 0;
+                                border:0;
+                                border-radius:8px;
+                                cursor:pointer;
+                            "
+                        >
+                            🤝 Match গ্রহণ (Accept Match)
+                        </button>
+                    `;
+
+                }
+
+                // ------------------------------------------
+                // DEAL CHAT
+                // ------------------------------------------
+
+                if (
+                    match.status === "accepted"
+                ) {
+
+                    actionHTML += `
+                        <button
+                            onclick="openDealChat('${match._id}')"
+                            style="
+                                padding:10px 14px;
+                                margin:5px 0;
+                                border:0;
+                                border-radius:8px;
+                                cursor:pointer;
+                            "
+                        >
+                            💬 দরদাম ও কথা (Deal Chat)
+                        </button>
+                    `;
+
+                }
+
+                // ------------------------------------------
+                // CONFIRM
+                // ------------------------------------------
+
+                if (
+                    match.status === "accepted" &&
+                    match.requester?._id === window.currentUserId
+                ) {
+
+                    actionHTML += `
+                        <button
+                            onclick="confirmMyMatch('${match._id}')"
+                            style="
+                                padding:10px 14px;
+                                margin:5px 0;
+                                border:0;
+                                border-radius:8px;
+                                cursor:pointer;
+                            "
+                        >
+                            💳 Confirmation তৈরি (Create Confirmation)
+                        </button>
+                    `;
+
+                }
+
+                // ------------------------------------------
+                // CONFIRMATION PAYMENT
+                // ------------------------------------------
+
+                if (
+                    match.status === "accepted" ||
+                    match.status === "confirmed"
+                ) {
+
+                    const myPayment =
+                        match.requester?._id === window.currentUserId
+                            ? match.requesterPayment
+                            : match.providerPayment;
+
+                    if (myPayment) {
+
+                        if (myPayment.status === "paid") {
+
+                            actionHTML += `
+                                <div style="
+                                    margin-top:8px;
+                                    padding:10px;
+                                    background:#e8f5e9;
+                                    border-radius:8px;
+                                ">
+                                    <img
+                                        src="/assets/deer-1-taka-full.jpg?v=20260825"
+                                        alt="১ টাকার হরিণের নোট"
+                                        style="
+                                            width:90px;
+                                            height:45px;
+                                            object-fit:contain;
+                                            vertical-align:middle;
+                                            margin-right:7px;
+                                            border-radius:4px;
+                                        "
+                                    >
+                                    ✅ আপনার ১ টাকা Confirmation Fee Paid
+                                </div>
+                            `;
+
+                        }
+
+                        else if (myPayment.status === "pending") {
+
+                            actionHTML += `
+                                <button
+                                    onclick="completeMyConfirmationPayment('${myPayment._id}')"
+                                    style="
+                                        padding:10px 14px;
+                                        margin:5px 0;
+                                        border:0;
+                                        border-radius:8px;
+                                        cursor:pointer;
+                                    "
+                                >
+                                    <img
+                                        src="/assets/deer-1-taka-full.jpg?v=20260825"
+                                        alt="১ টাকার হরিণের নোট"
+                                        style="
+                                            width:90px;
+                                            height:45px;
+                                            object-fit:contain;
+                                            vertical-align:middle;
+                                            margin-right:7px;
+                                            border-radius:4px;
+                                        "
+                                    >
+                                    ১ টাকা Payment করুন (Pay 1 Taka)
+                                </button>
+                            `;
+
+                        }
+
+                    }
+
+                }
+
+                // ------------------------------------------
+                // CONTACT INFORMATION
+                // ------------------------------------------
+
+                if (match.status === "confirmed") {
+
+                    const myContact =
+                        match.myContact;
+
+                    const otherContact =
+                        match.otherPartyContact;
+
+                    actionHTML += `
+                        <div style="
+                            margin-top:12px;
+                            padding:14px;
+                            border:1px solid #c8e6c9;
+                            border-radius:10px;
+                            background:#f6fff7;
+                        ">
+
+                            <div style="
+                                font-weight:bold;
+                                margin-bottom:8px;
+                            ">
+                                📍 যোগাযোগের তথ্য (Contact Information)
+                            </div>
+
+                            <div style="
+                                font-size:13px;
+                                color:#555;
+                                margin-bottom:10px;
+                            ">
+                                দুই পক্ষের Confirmation Payment সম্পন্ন হয়েছে।
+                                এখন যোগাযোগের তথ্য দেওয়া ও দেখা যাবে।
+                            </div>
+
+                            <div style="
+                                padding:10px;
+                                margin-bottom:10px;
+                                border-radius:8px;
+                                background:#ffffff;
+                                border:1px solid #ddd;
+                            ">
+
+                                <strong>
+                                    👤 আপনার যোগাযোগের তথ্য (Your Contact)
+                                </strong>
+
+                                <div style="margin-top:8px;">
+                                    ${myContact?.address
+                                        ? "📍 ঠিকানা: " +
+                                          escapeMatchHTML(myContact.address)
+                                        : "📍 ঠিকানা এখনো দেওয়া হয়নি।"}
+                                </div>
+
+                                <div style="margin-top:5px;">
+                                    ${myContact?.mobileNumber1
+                                        ? "📞 মোবাইল ১: " +
+                                          escapeMatchHTML(myContact.mobileNumber1)
+                                        : "📞 মোবাইল নম্বর এখনো দেওয়া হয়নি।"}
+                                </div>
+
+                                ${myContact?.mobileNumber2
+                                    ? `
+                                        <div style="margin-top:5px;">
+                                            📞 মোবাইল ২:
+                                            ${escapeMatchHTML(myContact.mobileNumber2)}
+                                        </div>
+                                      `
+                                    : ""}
+
+                            </div>
+
+                            <button
+                                type="button"
+                                onclick="showMatchContactForm('${match._id}')"
+                                style="
+                                    padding:10px 14px;
+                                    margin:4px 0 10px 0;
+                                    border:0;
+                                    border-radius:8px;
+                                    cursor:pointer;
+                                "
+                            >
+                                ✏️ যোগাযোগের তথ্য দেওয়া/পরিবর্তন
+                            </button>
+
+                            <div
+                                id="matchContactForm-${match._id}"
+                                style="display:none;"
+                            >
+
+                                <div style="
+                                    padding:12px;
+                                    margin-bottom:10px;
+                                    background:#fff;
+                                    border:1px solid #ddd;
+                                    border-radius:8px;
+                                ">
+
+                                    <input
+                                        id="contactAddress-${match._id}"
+                                        type="text"
+                                        maxlength="500"
+                                        placeholder="ঠিকানা (Address)"
+                                        value="${escapeMatchAttribute(myContact?.address || "")}"
+                                        style="
+                                            width:100%;
+                                            box-sizing:border-box;
+                                            padding:10px;
+                                            margin:5px 0;
+                                            border:1px solid #ccc;
+                                            border-radius:7px;
+                                        "
+                                    >
+
+                                    <input
+                                        id="contactMobile1-${match._id}"
+                                        type="tel"
+                                        maxlength="30"
+                                        placeholder="মোবাইল নম্বর ১ (Mobile Number 1)"
+                                        value="${escapeMatchAttribute(myContact?.mobileNumber1 || "")}"
+                                        style="
+                                            width:100%;
+                                            box-sizing:border-box;
+                                            padding:10px;
+                                            margin:5px 0;
+                                            border:1px solid #ccc;
+                                            border-radius:7px;
+                                        "
+                                    >
+
+                                    <input
+                                        id="contactMobile2-${match._id}"
+                                        type="tel"
+                                        maxlength="30"
+                                        placeholder="মোবাইল নম্বর ২ (Mobile Number 2) - ঐচ্ছিক"
+                                        value="${escapeMatchAttribute(myContact?.mobileNumber2 || "")}"
+                                        style="
+                                            width:100%;
+                                            box-sizing:border-box;
+                                            padding:10px;
+                                            margin:5px 0;
+                                            border:1px solid #ccc;
+                                            border-radius:7px;
+                                        "
+                                    >
+
+                                    <button
+                                        type="button"
+                                        onclick="saveMyMatchContact('${match._id}')"
+                                        style="
+                                            padding:10px 14px;
+                                            margin:6px 4px 0 0;
+                                            border:0;
+                                            border-radius:8px;
+                                            cursor:pointer;
+                                        "
+                                    >
+                                        💾 তথ্য সংরক্ষণ (Save Contact)
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onclick="hideMatchContactForm('${match._id}')"
+                                        style="
+                                            padding:10px 14px;
+                                            margin:6px 0 0 0;
+                                            border:0;
+                                            border-radius:8px;
+                                            cursor:pointer;
+                                        "
+                                    >
+                                        বাতিল (Cancel)
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                            <div style="
+                                padding:10px;
+                                border-radius:8px;
+                                background:#fff8e1;
+                                border:1px solid #ffe082;
+                            ">
+
+                                <strong>
+                                    🤝 অপর পক্ষের যোগাযোগের তথ্য
+                                    (Other Party Contact)
+                                </strong>
+
+                                ${otherContact
+                                    ? `
+                                        <div style="margin-top:8px;">
+                                            📍 ঠিকানা:
+                                            ${otherContact.address
+                                                ? escapeMatchHTML(otherContact.address)
+                                                : "দেওয়া হয়নি"}
+                                        </div>
+
+                                        <div style="margin-top:5px;">
+                                            📞 মোবাইল ১:
+                                            ${otherContact.mobileNumber1
+                                                ? escapeMatchHTML(otherContact.mobileNumber1)
+                                                : "দেওয়া হয়নি"}
+                                        </div>
+
+                                        ${otherContact.mobileNumber2
+                                            ? `
+                                                <div style="margin-top:5px;">
+                                                    📞 মোবাইল ২:
+                                                    ${escapeMatchHTML(otherContact.mobileNumber2)}
+                                                </div>
+                                              `
+                                            : ""}
+                                      `
+                                    : `
+                                        <div style="margin-top:8px;">
+                                            অপর পক্ষ এখনো যোগাযোগের তথ্য দেয়নি।
+                                        </div>
+                                      `}
+
+                            </div>
+
+                        </div>
+                    `;
+
+                }
+
+                return `
+                    <div style="
+                        padding:14px;
+                        margin:10px 0;
+                        border:1px solid #ddd;
+                        border-radius:12px;
+                    ">
+
+                        <div>
+                            <strong>Match ID:</strong>
+                            ${escapeMatchHTML(match._id || "")}
+                        </div>
+
+                        <div>
+                            <strong>Requester:</strong>
+                            ${escapeMatchHTML(requesterName)}
+                        </div>
+
+                        <div>
+                            <strong>Provider:</strong>
+                            ${escapeMatchHTML(providerName)}
+                        </div>
+
+                        <div style="margin-top:6px;">
+                            <strong>Status:</strong>
+                            ${statusText}
+                        </div>
+
+                        <div style="margin-top:8px;">
+                            ${actionHTML}
+                        </div>
+
+                    </div>
+                `;
+
+            }).join("");
+
+    } catch (error) {
+
+        console.error(
+            "❌ My Matches UI Error:",
+            error
+        );
+
+        container.innerHTML =
+            "<p>❌ Match লোড করার সময় সমস্যা হয়েছে।</p>";
+    }
+}
+
+
+/*
+==================================================
+MATCH CONTACT HELPERS
+==================================================
+*/
+
+function escapeMatchHTML(value) {
+
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+
+function escapeMatchAttribute(value) {
+
+    return escapeMatchHTML(value);
+}
+
+
+function showMatchContactForm(matchId) {
+
+    const form =
+        document.getElementById(
+            "matchContactForm-" + matchId
+        );
+
+    if (form) {
+        form.style.display = "block";
+    }
+}
+
+
+function hideMatchContactForm(matchId) {
+
+    const form =
+        document.getElementById(
+            "matchContactForm-" + matchId
+        );
+
+    if (form) {
+        form.style.display = "none";
+    }
+}
+
+
+async function saveMyMatchContact(matchId) {
+
+    if (!matchId) {
+        alert("❌ Match ID পাওয়া যায়নি।");
+        return;
+    }
+
+    const addressInput =
+        document.getElementById(
+            "contactAddress-" + matchId
+        );
+
+    const mobile1Input =
+        document.getElementById(
+            "contactMobile1-" + matchId
+        );
+
+    const mobile2Input =
+        document.getElementById(
+            "contactMobile2-" + matchId
+        );
+
+    if (!addressInput || !mobile1Input) {
+        alert("❌ Contact Form পাওয়া যায়নি।");
+        return;
+    }
+
+    const address =
+        addressInput.value.trim();
+
+    const mobileNumber1 =
+        mobile1Input.value.trim();
+
+    const mobileNumber2 =
+        mobile2Input
+            ? mobile2Input.value.trim()
+            : "";
+
+    if (!address) {
+        alert("❌ ঠিকানা দিন।");
+        return;
+    }
+
+    if (!mobileNumber1) {
+        alert("❌ মোবাইল নম্বর ১ দিন।");
+        return;
+    }
+
+    if (address.length > 500) {
+        alert(
+            "❌ ঠিকানা সর্বোচ্চ ৫০০ অক্ষরের মধ্যে দিন।"
+        );
+        return;
+    }
+
+    if (
+        mobileNumber1.length > 30 ||
+        mobileNumber2.length > 30
+    ) {
+        alert(
+            "❌ মোবাইল নম্বর সর্বোচ্চ ৩০ অক্ষরের মধ্যে দিন।"
+        );
+        return;
+    }
+
+    const ok =
+        confirm(
+            "আপনার যোগাযোগের তথ্য সংরক্ষণ করতে চান?"
+        );
+
+    if (!ok) return;
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/matches/" +
+                matchId +
+                "/contact",
+                {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+                    body: JSON.stringify({
+                        address,
+                        mobileNumber1,
+                        mobileNumber2
+                    })
+                }
+            );
+
+        const data =
+            await response.json();
+
+        if (!data.success) {
+            alert(
+                data.message ||
+                "❌ Contact Information সংরক্ষণ করা যায়নি।"
+            );
+            return;
+        }
+
+        alert(
+            data.message ||
+            "✅ যোগাযোগের তথ্য সংরক্ষণ হয়েছে।"
+        );
+
+        loadMyMatches();
+
+    } catch (error) {
+
+        console.error(
+            "❌ Match Contact Save UI Error:",
+            error
+        );
+
+        alert(
+            "❌ যোগাযোগের তথ্য সংরক্ষণ করা যায়নি।"
+        );
+    }
+}
+
+
+/*
+==================================================
+ACCEPT MATCH
+==================================================
+*/
+
+async function acceptMyMatch(matchId) {
+
+    const ok =
+        confirm(
+            "এই Match Accept করতে চান?"
+        );
+
+    if (!ok) return;
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/matches/" +
+                matchId +
+                "/accept",
+                {
+                    method:"PUT",
+                    headers:{
+                        "Content-Type":
+                            "application/json"
+                    }
+                }
+            );
+
+        const data =
+            await response.json();
+
+        alert(
+            data.message ||
+            "Match Accept করা হয়েছে।"
+        );
+
+        if (data.success) {
+            loadMyMatches();
+        }
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(
+            "❌ Match Accept করা যায়নি।"
+        );
+    }
+}
+
+
+/*
+==================================================
+CONFIRM MATCH
+==================================================
+*/
+
+async function confirmMyMatch(matchId) {
+
+    const ok =
+        confirm(
+            "Confirmation তৈরি করতে চান?\n\nদুই পক্ষের জন্য ১ টাকা করে Fee তৈরি হবে।"
+        );
+
+    if (!ok) return;
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/matches/" +
+                matchId +
+                "/confirm",
+                {
+                    method:"POST",
+                    headers:{
+                        "Content-Type":
+                            "application/json"
+                    }
+                }
+            );
+
+        const data =
+            await response.json();
+
+        alert(
+            data.message ||
+            "Confirmation তৈরি হয়েছে।"
+        );
+
+        if (data.success) {
+            loadMyMatches();
+        }
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(
+            "❌ Confirmation তৈরি করা যায়নি।"
+        );
+    }
+}
+
+
+/*
+==================================================
+COMPLETE CONFIRMATION PAYMENT
+==================================================
+*/
+
+async function completeMyConfirmationPayment(paymentId) {
+
+    if (!paymentId) {
+        alert("❌ Payment ID পাওয়া যায়নি।");
+        return;
+    }
+
+    const ok =
+        confirm(
+            "আপনার ১ টাকা Confirmation Fee Paid করতে চান?"
+        );
+
+    if (!ok) return;
+
+    const transactionId =
+        prompt(
+            "Transaction ID থাকলে লিখুন। না থাকলে খালি রেখে OK দিন।"
+        );
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/payment/confirmation/complete",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        paymentId: paymentId,
+                        transactionId:
+                            transactionId
+                                ? transactionId.trim()
+                                : null
+                    })
+                }
+            );
+
+        const data =
+            await response.json();
+
+        if (!data.success) {
+
+            alert(
+                data.message ||
+                "Payment সফল হয়নি।"
+            );
+
+            return;
+        }
+
+        alert(
+            data.bothPaid
+                ? "✅ দুই পক্ষের ১ টাকা করে Payment Paid হয়েছে। Match এখন Confirmed!"
+                : "✅ আপনার ১ টাকা Confirmation Fee Paid হয়েছে। অপর পক্ষের Payment-এর অপেক্ষায় আছে।"
+        );
+
+        loadMyMatches();
+
+    } catch (error) {
+
+        console.error(
+            "❌ Confirmation Payment Error:",
+            error
+        );
+
+        alert(
+            "❌ Payment সম্পন্ন করা যায়নি।"
+        );
+    }
+}
+
+
+
+/*
+==================================================
+DEAL CHAT PLACEHOLDER
+==================================================
+*/
+
+
+function openDealChat(matchId) {
+
+    window.currentDealChatMatchId = matchId;
+
+    const modal = document.getElementById("dealChatModal");
+
+    if (modal) {
+        modal.style.display = "flex";
+        loadDealChat(matchId);
+    }
+}
+
+
+function closeDealChat() {
+
+    const modal = document.getElementById("dealChatModal");
+
+    if (modal) {
+        modal.style.display = "none";
+    }
+
+    window.currentDealChatMatchId = null;
+}
+
+
+function escapeDealChatHTML(value) {
+
+    return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+
+async function loadDealChat(matchId) {
+
+    const box = document.getElementById("dealChatMessages");
+
+    if (!box) return;
+
+    box.innerHTML = "<p>💬 Chat লোড হচ্ছে...</p>";
+
+    try {
+
+        const response =
+            await fetch("/api/deal-chat/" + matchId);
+
+        const data =
+            await response.json();
+
+        if (!data.success) {
+
+            box.innerHTML =
+                "<p>❌ " +
+                escapeDealChatHTML(
+                    data.message || "Chat লোড করা যায়নি।"
+                ) +
+                "</p>";
+
+            return;
+        }
+
+        renderDealChat(data.chat);
+
+    } catch (error) {
+
+        console.error("❌ Deal Chat Load Error:", error);
+
+        box.innerHTML =
+            "<p>❌ Server-এর সাথে যোগাযোগ করা যাচ্ছে না।</p>";
+    }
+}
+
+
+function renderDealChat(chat) {
+
+    const box =
+        document.getElementById("dealChatMessages");
+
+    if (!box) return;
+
+    const messages =
+        Array.isArray(chat.messages)
+            ? chat.messages
+            : [];
+
+    if (!messages.length) {
+
+        box.innerHTML =
+            "<p style='text-align:center;color:#777;'>এখনো কোনো কথা হয়নি।</p>";
+
+    } else {
+
+        box.innerHTML =
+            messages.map(function(message) {
+
+                const senderId =
+                    message.sender &&
+                    (
+                        message.sender._id ||
+                        message.sender
+                    );
+
+                const mine =
+                    String(senderId) ===
+                    String(window.currentUserId);
+
+                const messageText =
+                    escapeDealChatHTML(message.text);
+
+                let content = "";
+
+                if (message.type === "offer") {
+
+                    content =
+                        "<div style='font-size:20px;font-weight:bold;'>💰 " +
+                        messageText +
+                        "</div>";
+
+                    if (
+                        !mine &&
+                        chat.dealStatus !== "agreed"
+                    ) {
+
+                        content +=
+                            "<button onclick='agreeDealOffer()' " +
+                            "style='margin-top:8px;padding:7px 12px;border:0;border-radius:7px;cursor:pointer;'>" +
+                            "🤝 এই দামে Agree" +
+                            "</button>";
+                    }
+
+                } else {
+
+                    content =
+                        "<div>" +
+                        messageText +
+                        "</div>";
+                }
+
+                return (
+                    "<div style='display:flex;justify-content:" +
+                    (mine ? "flex-end" : "flex-start") +
+                    ";margin:8px 0;'>" +
+
+                        "<div style='max-width:82%;padding:10px 12px;border-radius:12px;background:" +
+                        (mine ? "#e8f5e9" : "#f1f1f1") +
+                        ";'>" +
+
+                            content +
+
+                        "</div>" +
+
+                    "</div>"
+                );
+
+            }).join("");
+
+        box.scrollTop = box.scrollHeight;
+    }
+
+    const statusBox =
+        document.getElementById("dealChatStatus");
+
+    if (!statusBox) return;
+
+    if (
+        chat.dealStatus === "agreed" &&
+        chat.agreedAmount
+    ) {
+
+        statusBox.innerHTML =
+            "✅ সম্মত মূল্য: <b>" +
+            escapeDealChatHTML(chat.agreedAmount) +
+            "/=</b>";
+
+    } else if (chat.lastOfferAmount) {
+
+        statusBox.innerHTML =
+            "💰 বর্তমান দর: <b>" +
+            escapeDealChatHTML(chat.lastOfferAmount) +
+            "/=</b>";
+
+    } else {
+
+        statusBox.innerHTML =
+            "💬 এখনো কোনো দরদাম দেওয়া হয়নি।";
+    }
+}
+
+
+async function sendDealChatMessage() {
+
+    const matchId =
+        window.currentDealChatMatchId;
+
+    const input =
+        document.getElementById("dealChatInput");
+
+    if (!matchId || !input) return;
+
+    const text =
+        input.value.trim();
+
+    if (!text) {
+        alert("Message লিখুন।");
+        return;
+    }
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/deal-chat/" +
+                matchId +
+                "/message",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        text: text,
+                        type: "text"
+                    })
+                }
+            );
+
+        const data =
+            await response.json();
+
+        if (!data.success) {
+
+            alert(
+                data.message ||
+                "Message পাঠানো যায়নি।"
+            );
+
+            return;
+        }
+
+        input.value = "";
+
+        renderDealChat(data.chat);
+
+    } catch (error) {
+
+        console.error("❌ Deal Chat Send Error:", error);
+
+        alert("❌ Message পাঠানো যায়নি।");
+    }
+}
+
+
+async function sendDealOffer() {
+
+    const matchId =
+        window.currentDealChatMatchId;
+
+    const input =
+        document.getElementById("dealChatOffer");
+
+    if (!matchId || !input) return;
+
+    const amount =
+        Number(input.value);
+
+    if (
+        !Number.isInteger(amount) ||
+        amount < 1 ||
+        amount > 999999
+    ) {
+
+        alert(
+            "❌ দরদামের টাকা ১ থেকে ৬ digit-এর মধ্যে হতে হবে।"
+        );
+
+        return;
+    }
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/deal-chat/" +
+                matchId +
+                "/message",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        type: "offer",
+                        amount: amount
+                    })
+                }
+            );
+
+        const data =
+            await response.json();
+
+        if (!data.success) {
+
+            alert(
+                data.message ||
+                "Offer পাঠানো যায়নি।"
+            );
+
+            return;
+        }
+
+        input.value = "";
+
+        renderDealChat(data.chat);
+
+    } catch (error) {
+
+        console.error("❌ Deal Offer Error:", error);
+
+        alert("❌ Offer পাঠানো যায়নি।");
+    }
+}
+
+
+async function agreeDealOffer() {
+
+    const matchId =
+        window.currentDealChatMatchId;
+
+    if (!matchId) return;
+
+    if (!confirm("বর্তমান দরদামে Agree করতে চান?")) {
+        return;
+    }
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/deal-chat/" +
+                matchId +
+                "/agree",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                }
+            );
+
+        const data =
+            await response.json();
+
+        alert(
+            data.message ||
+            "Deal Agree করা হয়েছে।"
+        );
+
+        if (data.success) {
+
+            renderDealChat(data.chat);
+
+            if (typeof loadMyMatches === "function") {
+                loadMyMatches();
+            }
+        }
+
+    } catch (error) {
+
+        console.error("❌ Deal Agree Error:", error);
+
+        alert("❌ Deal Agree করা যায়নি।");
+    }
+}
+
+
+document.addEventListener("DOMContentLoaded", function() {
+
+    if (document.getElementById("dealChatModal")) {
+        return;
+    }
+
+    const modal =
+        document.createElement("div");
+
+    modal.id = "dealChatModal";
+
+    modal.style.cssText =
+        "display:none;" +
+        "position:fixed;" +
+        "inset:0;" +
+        "background:rgba(0,0,0,.55);" +
+        "z-index:99999;" +
+        "align-items:center;" +
+        "justify-content:center;" +
+        "padding:12px;";
+
+    modal.innerHTML =
+        "<div style='" +
+        "width:100%;" +
+        "max-width:520px;" +
+        "max-height:92vh;" +
+        "background:#fff;" +
+        "border-radius:16px;" +
+        "overflow:hidden;" +
+        "box-shadow:0 8px 30px rgba(0,0,0,.25);" +
+        "display:flex;" +
+        "flex-direction:column;" +
+        "'>" +
+
+            "<div style='" +
+            "padding:14px 16px;" +
+            "background:#f5f5f5;" +
+            "border-bottom:1px solid #ddd;" +
+            "display:flex;" +
+            "align-items:center;" +
+            "justify-content:space-between;" +
+            "'>" +
+
+                "<strong>💬 দরদাম ও কথা</strong>" +
+
+                "<button " +
+                "onclick='closeDealChat()' " +
+                "style='border:0;background:transparent;font-size:24px;cursor:pointer;'>" +
+                "×" +
+                "</button>" +
+
+            "</div>" +
+
+            "<div id='dealChatStatus' style='" +
+            "padding:10px 14px;" +
+            "background:#fffbea;" +
+            "border-bottom:1px solid #eee;" +
+            "'>" +
+                "💬 Chat প্রস্তুত হচ্ছে..." +
+            "</div>" +
+
+            "<div id='dealChatMessages' style='" +
+            "min-height:250px;" +
+            "max-height:420px;" +
+            "overflow-y:auto;" +
+            "padding:12px;" +
+            "'>" +
+                "<p>Chat লোড হচ্ছে...</p>" +
+            "</div>" +
+
+            "<div style='" +
+            "padding:10px;" +
+            "border-top:1px solid #ddd;" +
+            "'>" +
+
+                "<div style='display:flex;gap:6px;'>" +
+
+                    "<input " +
+                    "id='dealChatInput' " +
+                    "type='text' " +
+                    "maxlength='500' " +
+                    "placeholder='পণ্য/সেবা সম্পর্কে লিখুন...' " +
+                    "style='flex:1;padding:10px;border:1px solid #ccc;border-radius:8px;'>" +
+
+                    "<button " +
+                    "onclick='sendDealChatMessage()' " +
+                    "style='padding:10px 13px;border:0;border-radius:8px;cursor:pointer;'>" +
+                    "পাঠান" +
+                    "</button>" +
+
+                "</div>" +
+
+                "<div style='display:flex;gap:6px;margin-top:8px;'>" +
+
+                    "<input " +
+                    "id='dealChatOffer' " +
+                    "type='number' " +
+                    "min='1' " +
+                    "max='999999' " +
+                    "placeholder='দরদাম (যেমন 25000)' " +
+                    "style='flex:1;padding:10px;border:1px solid #ccc;border-radius:8px;'>" +
+
+                    "<button " +
+                    "onclick='sendDealOffer()' " +
+                    "style='padding:10px 13px;border:0;border-radius:8px;cursor:pointer;'>" +
+                    "💰 Offer" +
+                    "</button>" +
+
+                "</div>" +
+
+                "<small style='display:block;margin-top:7px;color:#777;'>" +
+                "⚠️ শুধু পণ্য/সেবা ও দরদাম নিয়ে কথা বলুন। Mobile, Phone, WhatsApp, IMO বা Contact Information দেওয়া যাবে না।" +
+                "</small>" +
+
+            "</div>" +
+
+        "</div>";
+
+    document.body.appendChild(modal);
+});
+
+/*
+==================================================
+AUTO LOAD
+==================================================
+*/
+
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        loadMyMatches();
+
+    }
+);
+
+</script>
+
+
+
+<div class="header">
+    <div class="container">
+        <h1>প্রয়োজনX</h1>
+        <div id="userInfo">⏳ Loading...</div>
+    </div>
+</div>
+
+<div class="container">
+
+    <div class="card">
+
+        <div class="card" id="mainChoiceButtons">
+
+            <h2>আপনি কী করতে চান?</h2>
+
+            <div class="main-choice-buttons">
+
+                <button
+                    type="button"
+                    class="main-choice-btn"
+                    onclick="showProviderSection()"
+                >
+                    <span class="main-choice-icon">🛒</span>
+                    <span class="main-choice-bn">
+                        আমি পণ্য বা সেবা/সার্ভিস দিতে চাই
+                    </span>
+                    <span class="main-choice-en">
+                        I Want to Provide
+                    </span>
+                </button>
+
+                <button
+                    type="button"
+                    class="main-choice-btn"
+                    onclick="showRequesterSection()"
+                >
+                    <span class="main-choice-icon">📢</span>
+                    <span class="main-choice-bn">
+                        আমি পণ্য বা সেবা/সার্ভিস নিতে চাই
+                    </span>
+                    <span class="main-choice-en">
+                        I Want to Get
+                    </span>
+                </button>
+
+            </div>
+
+        </div>
+
+<h2>👤 আমার Dashboard</h2>
+        <p>আপনার ProyojonX অ্যাকাউন্ট থেকে প্রয়োজনীয় কাজ করুন।</p>
+
+
+
+    </div>
+
+    <div class="card hidden" id="requestForm">
+        <h2>📢 নতুন প্রয়োজন</h2>
+
+        <input id="title" placeholder="কী প্রয়োজন? যেমন: গরুর ফিড প্রয়োজন">
+
+        <select id="type">
+            <option value="product">🛒 পণ্য</option>
+            <option value="service">🔧 সেবা</option>
+            <option value="job">💼 চাকরি</option>
+            <option value="tuition">📚 টিউশন</option>
+            <option value="rental">🏠 ভাড়া</option>
+            <option value="other">📌 অন্যান্য</option>
+        </select>
+
+        <select id="category">
+            <option value="">ক্যাটাগরি নির্বাচন করুন</option>
+        </select>
+
+        <select id="subcategory">
+            <option value="">আগে ক্যাটাগরি নির্বাচন করুন</option>
+        </select>
+
+        <textarea id="description" placeholder="বিস্তারিত লিখুন"></textarea>
+
+        <input id="district" placeholder="জেলা">
+        <input id="upazila" placeholder="উপজেলা">
+        <input id="union" placeholder="ইউনিয়ন">
+        <input id="village" placeholder="গ্রাম">
+        <input id="budget" type="number" placeholder="বাজেট (টাকা)">
+
+        <button onclick="createRequest()">📢 প্রয়োজন পোস্ট করুন</button>
+        <div id="requestMessage" class="message"></div>
+    </div>
+
+    <div class="card">
+        <h2>🛒 আমার পণ্য</h2>
+
+        <button onclick="showProductForm()">
+            ➕ নতুন পণ্য যোগ করুন
+        </button>
+
+        <button onclick="loadMyProducts()">
+            🔄 আমার পণ্য Refresh
+        </button>
+
+        <div class="card hidden" id="productForm">
+            <h3>➕ নতুন পণ্য</h3>
+
+            <input
+                id="productName"
+                placeholder="পণ্যের নাম যেমন: গরুর ফিড"
+            >
+
+            <select id="productCategory">
+                <option value="">ক্যাটাগরি নির্বাচন করুন</option>
+            </select>
+
+            <select id="productSubcategory">
+                <option value="">আগে ক্যাটাগরি নির্বাচন করুন</option>
+            </select>
+
+            <textarea
+                id="productDescription"
+                placeholder="পণ্যের বিস্তারিত"
+            ></textarea>
+
+            <input
+                id="productPrice"
+                type="number"
+                min="0"
+                placeholder="দাম"
+            >
+
+            <input
+                id="productUnit"
+                placeholder="একক যেমন: বস্তা, কেজি, পিস"
+            >
+
+            <input
+                id="productDistrict"
+                placeholder="জেলা"
+            >
+
+            <input
+                id="productUpazila"
+                placeholder="উপজেলা"
+            >
+
+            <input
+                id="productUnion"
+                placeholder="ইউনিয়ন"
+            >
+
+            <input
+                id="productVillage"
+                placeholder="গ্রাম"
+            >
+
+            <div class="benefits-box">
+                <h4>⭐ সুবিধা (Benefits/Features) — সর্বোচ্চ ৭টি, ঐচ্ছিক</h4>
+
+                <input id="productBenefit1" placeholder="সুবিধা ১ (ঐচ্ছিক)">
+                <input id="productBenefit2" placeholder="সুবিধা ২ (ঐচ্ছিক)">
+                <input id="productBenefit3" placeholder="সুবিধা ৩ (ঐচ্ছিক)">
+                <input id="productBenefit4" placeholder="সুবিধা ৪ (ঐচ্ছিক)">
+                <input id="productBenefit5" placeholder="সুবিধা ৫ (ঐচ্ছিক)">
+                <input id="productBenefit6" placeholder="সুবিধা ৬ (ঐচ্ছিক)">
+                <input id="productBenefit7" placeholder="সুবিধা ৭ (ঐচ্ছিক)">
+            </div>
+
+            <button onclick="createProduct()">
+                🛒 পণ্য সংরক্ষণ করুন
+            </button>
+
+            <div id="productMessage" class="message"></div>
+        </div>
+
+        <div id="myProducts">
+            ⏳ Product Loading...
+        </div>
+    </div>
+
+    <div class="card" id="serviceSection">
+
+        <h2>🔧 আমার সেবা (My Services)</h2>
+
+        <button onclick="showServiceForm()">
+            ➕ নতুন সেবা যোগ করুন
+        </button>
+
+        <button onclick="loadMyServices()">
+            🔄 আমার সেবা Refresh
+        </button>
+
+        <div class="card hidden" id="serviceForm">
+
+            <h3>➕ নতুন সেবা (New Service)</h3>
+
+            <input
+                id="serviceName"
+                placeholder="সেবার নাম যেমন: ইলেকট্রিশিয়ান"
+            >
+
+            <select id="serviceCategory">
+                <option value="">ক্যাটাগরি নির্বাচন করুন</option>
+            </select>
+
+            <select id="serviceSubcategory">
+                <option value="">আগে ক্যাটাগরি নির্বাচন করুন</option>
+            </select>
+
+            <textarea
+                id="serviceDescription"
+                placeholder="সেবার বিস্তারিত লিখুন"
+            ></textarea>
+
+            <input
+                id="servicePrice"
+                type="number"
+                min="0"
+                placeholder="মূল্য"
+            >
+
+            <select id="servicePriceType">
+                <option value="negotiable">
+                    আলোচনা সাপেক্ষ (Negotiable)
+                </option>
+                <option value="fixed">
+                    নির্ধারিত মূল্য (Fixed)
+                </option>
+                <option value="hourly">
+                    ঘণ্টাভিত্তিক (Hourly)
+                </option>
+                <option value="daily">
+                    দৈনিক (Daily)
+                </option>
+            </select>
+
+            <input
+                id="serviceDistrict"
+                placeholder="জেলা"
+            >
+
+            <input
+                id="serviceUpazila"
+                placeholder="উপজেলা"
+            >
+
+            <input
+                id="serviceUnion"
+                placeholder="ইউনিয়ন"
+            >
+
+            <input
+                id="serviceVillage"
+                placeholder="গ্রাম"
+            >
+
+            <div class="benefits-box">
+                <h4>⭐ সুবিধা (Benefits/Features) — সর্বোচ্চ ৭টি, ঐচ্ছিক</h4>
+
+                <input id="serviceBenefit1" placeholder="সুবিধা ১ (ঐচ্ছিক)">
+                <input id="serviceBenefit2" placeholder="সুবিধা ২ (ঐচ্ছিক)">
+                <input id="serviceBenefit3" placeholder="সুবিধা ৩ (ঐচ্ছিক)">
+                <input id="serviceBenefit4" placeholder="সুবিধা ৪ (ঐচ্ছিক)">
+                <input id="serviceBenefit5" placeholder="সুবিধা ৫ (ঐচ্ছিক)">
+                <input id="serviceBenefit6" placeholder="সুবিধা ৬ (ঐচ্ছিক)">
+                <input id="serviceBenefit7" placeholder="সুবিধা ৭ (ঐচ্ছিক)">
+            </div>
+
+            <button onclick="createService()">
+                🔧 সেবা সংরক্ষণ করুন
+            </button>
+
+            <div id="serviceMessage" class="message"></div>
+
+        </div>
+
+        <div id="myServices">
+            ⏳ Service Loading...
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2>🔧 প্রকাশিত সেবা (Published Services)</h2>
+
+        <button onclick="loadPublishedServices()">
+            🔄 প্রকাশিত সেবা Refresh
+        </button>
+
+        <div id="publishedServices">
+            ⏳ Service Loading...
+        </div>
+
+    </div>
+
+
+    <div class="card">
+        <h2>🛍️ প্রকাশিত পণ্য</h2>
+
+        <button onclick="loadPublishedProducts()">
+            🔄 প্রকাশিত পণ্য Refresh
+        </button>
+
+        <div id="publishedProducts">
+            ⏳ Product Loading...
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>🔎 খোলা প্রয়োজন</h2>
+
+        <button onclick="loadOpenRequests()">
+            🔄 খোলা প্রয়োজন Refresh
+        </button>
+
+        <div id="openRequests">
+            ⏳ Loading...
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>📋 আমার প্রয়োজন</h2>
+        <div id="requests">
+            ⏳ Loading...
+        </div>
+    </div>
+
+</div>
+
+<script>
+
+
+async function selectProductForMatch(productId){
+
+    if(!productId){
+        alert("❌ Product ID পাওয়া যায়নি।");
+        return;
+    }
+
+    try{
+
+        const response =
+            await fetch("/api/requests/open");
+
+        const result =
+            await response.json();
+
+        if(!result.success){
+
+            alert(
+                "❌ " +
+                (result.message || "Open Request পাওয়া যায়নি।")
+            );
+
+            return;
+        }
+
+        if(!result.requests ||
+           result.requests.length === 0){
+
+            alert("📭 এখন কোনো Open Request নেই।");
+            return;
+        }
+
+        const options =
+            result.requests
+                .map((request, index) =>
+                    (index + 1) + ". " +
+                    (request.title || "প্রয়োজন")
+                )
+                .join("\n");
+
+        const choice =
+            prompt(
+                "কোন প্রয়োজনের জন্য এই Product দিয়ে Match করবেন?\\n\\n" +
+                options +
+                "\\n\\nনম্বর দিন:"
+            );
+
+        if(!choice){
+            return;
+        }
+
+        const index =
+            Number(choice) - 1;
+
+        if(
+            !Number.isInteger(index) ||
+            index < 0 ||
+            index >= result.requests.length
+        ){
+            alert("❌ সঠিক নম্বর নির্বাচন করুন।");
+            return;
+        }
+
+        const requestId =
+            result.requests[index]._id;
+
+        await createMatchFromRequest(
+            requestId,
+            productId
+        );
+
+    }catch(error){
+
+        console.error(error);
+
+        alert(
+            "❌ Server-এর সাথে যোগাযোগ করা যাচ্ছে না।"
+        );
+    }
+}
+
+async function createMatchFromRequest(requestId, productId){
+
+    if(!requestId){
+        alert("❌ Request ID পাওয়া যায়নি।");
+        return;
+    }
+
+    const confirmed =
+        confirm(
+            "এই প্রয়োজনের জন্য Match তৈরি করতে চান?"
+        );
+
+    if(!confirmed){
+        return;
+    }
+
+    try{
+
+        const response =
+            await fetch("/api/matches", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    requestId: requestId,
+                    listingType: "product",
+                    listingId: productId
+                })
+            });
+
+        const result =
+            await response.json();
+
+        if(result.success){
+
+            alert(
+                "✅ Match সফলভাবে তৈরি হয়েছে।"
+            );
+
+            loadOpenRequests();
+
+        }else{
+
+            alert(
+                "❌ " +
+                (result.message ||
+                "Match তৈরি করা যায়নি।")
+            );
+        }
+
+    }catch(error){
+
+        console.error(error);
+
+        alert(
+            "❌ Server-এর সাথে যোগাযোগ করা যাচ্ছে না।"
+        );
+    }
+}
+
+
+async function loadOpenRequests(){
+
+    const box =
+        document.getElementById("openRequests");
+
+    if(!box) return;
+
+    box.innerHTML = "⏳ Loading...";
+
+    try{
+
+        const response =
+            await fetch("/api/requests/open");
+
+        const result =
+            await response.json();
+
+        if(!result.success){
+
+            box.innerHTML =
+                "❌ " +
+                (result.message || "Open Request পাওয়া যায়নি।");
+
+            return;
+        }
+
+        if(!result.requests ||
+           result.requests.length === 0){
+
+            box.innerHTML =
+                "📭 এখন কোনো Open Request নেই।";
+
+            return;
+        }
+
+        box.innerHTML =
+            result.requests.map(r => {
+
+                const requester =
+                    r.requester || {};
+
+                return `
+                    <div class="request">
+
+                        <h3>
+                            📢 ${escapeHtml(r.title || "")}
+                        </h3>
+
+                        <p>
+                            🏷️ ধরন:
+                            ${escapeHtml(r.type || "")}
+                        </p>
+
+                        <p>
+                            📂 ক্যাটাগরি:
+                            ${escapeHtml(r.category || "")}
+                        </p>
+
+                        <p>
+                            📍
+                            ${escapeHtml(r.district || "")}
+                            ${escapeHtml(r.upazila || "")}
+                        </p>
+
+                        <p>
+                            💰 বাজেট:
+                            ${Number(r.budget) || 0} টাকা
+                        </p>
+
+                        <p>
+                            👤 প্রয়োজনকারী:
+                            ${escapeHtml(requester.name || "")}
+                        </p>
+
+                    </div>
+                `;
+
+            }).join("");
+
+    }catch(error){
+
+        console.error(error);
+
+        box.innerHTML =
+            "❌ Server-এর সাথে যোগাযোগ করা যাচ্ছে না।";
+    }
+}
+
+
+async function loadMe(){
+
+    try{
+        const response = await fetch("/api/me");
+        const result = await response.json();
+
+        if(!result.loggedIn){
+            window.location.href="/login.html";
+            return;
+        }
+
+        window.currentUserId =
+            result.user._id || result.user.id || null;
+
+        if(!window.currentUserId){
+            console.warn("⚠️ Current User ID পাওয়া যায়নি।");
+        }
+
+        document.getElementById("userInfo").innerHTML =
+            "👋 স্বাগতম, <b>" +
+            (result.user.name || "") +
+            "</b> | 📱 " +
+            (result.user.phone || "");
+
+    }catch(error){
+        document.getElementById("userInfo").textContent =
+            "❌ Server connection error";
+    }
+}
+
+
+function showRequestForm(){
+    document.getElementById("requestForm").classList.toggle("hidden");
+}
+
+
+async function createRequest(){
+
+    const message =
+        document.getElementById("requestMessage");
+
+    // ========================================
+    // STEP 5G-27 REQUEST LOCATION
+    // ========================================
+
+    let latitude = null;
+    let longitude = null;
+
+    try {
+
+        const meResponse =
+            await fetch("/api/me");
+
+        const meResult =
+            await meResponse.json();
+
+        if (
+            meResult.success &&
+            meResult.loggedIn &&
+            meResult.user
+        ) {
+            latitude =
+                meResult.user.latitude ?? null;
+
+            longitude =
+                meResult.user.longitude ?? null;
+        }
+
+    } catch (locationError) {
+
+        console.log(
+            "ℹ️ Saved user location unavailable:",
+            locationError.message
+        );
+
+    }
+
+    const data = {
+        type: document.getElementById("type").value,
+        title: document.getElementById("title").value.trim(),
+        description: document.getElementById("description").value.trim(),
+        category: document.getElementById("category").value.trim(),
+        subcategory: document.getElementById("subcategory").value.trim(),
+        district: document.getElementById("district").value.trim(),
+        upazila: document.getElementById("upazila").value.trim(),
+        union: document.getElementById("union").value.trim(),
+        village: document.getElementById("village").value.trim(),
+        budget: Number(document.getElementById("budget").value) || 0,
+
+        latitude: latitude,
+
+        longitude: longitude
+    };
+
+    if(!data.title){
+        message.textContent="❌ প্রয়োজনের নাম লিখুন।";
+        return;
+    }
+
+    message.textContent="⏳ পোস্ট হচ্ছে...";
+
+    try{
+
+        const response = await fetch("/api/requests",{
+            method:"POST",
+            headers:{
+                "Content-Type":"application/json"
+            },
+            body:JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        if(result.success){
+
+            message.textContent =
+                "✅ প্রয়োজন সফলভাবে পোস্ট হয়েছে।";
+
+            document.getElementById("title").value="";
+            document.getElementById("description").value="";
+            document.getElementById("budget").value="";
+
+            loadRequests();
+
+        }else{
+
+            message.textContent =
+                "❌ " + (result.message || "পোস্ট করা যায়নি।");
+
+        }
+
+    }catch(error){
+
+        message.textContent =
+            "❌ Server-এর সাথে যোগাযোগ করা যাচ্ছে না।";
+
+    }
+}
+
+
+async function loadRequests(){
+
+    const box =
+        document.getElementById("requests");
+
+    box.innerHTML="⏳ Loading...";
+
+    try{
+
+        const response =
+            await fetch("/api/requests/my");
+
+        const result =
+            await response.json();
+
+        if(!result.success){
+
+            box.innerHTML =
+                "❌ " + (result.message || "তথ্য পাওয়া যায়নি।");
+
+            return;
+        }
+
+        if(!result.requests || result.requests.length===0){
+
+            box.innerHTML =
+                "📭 এখনো কোনো প্রয়োজন পোস্ট করেননি।";
+
+            return;
+        }
+
+        box.innerHTML =
+            result.requests.map(r => `
+
+                <div class="request">
+
+                    <h3>${escapeHtml(r.title)}</h3>
+
+                    <p>
+                        ${escapeHtml(r.description || "")}
+                    </p>
+
+                    <p>
+                        📍 ${escapeHtml(r.district || "")}
+                        ${escapeHtml(r.upazila || "")}
+                    </p>
+
+                    <p>
+                        💰 বাজেট: ${r.budget || 0} টাকা
+                    </p>
+
+                    <p class="status">
+                        📌 Status: ${escapeHtml(r.status || "")}
+                    </p>
+
+                    <small>
+                        ${new Date(r.createdAt).toLocaleString("bn-BD")}
+                    </small>
+
+                </div>
+
+            `).join("");
+
+    }catch(error){
+
+        box.innerHTML =
+            "❌ Server-এর সাথে যোগাযোগ করা যাচ্ছে না।";
+
+    }
+}
+
+
+function escapeHtml(text){
+
+    return String(text)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+
+}
+
+
+async function logout(){
+
+    try{
+
+        await fetch("/api/logout",{
+            method:"POST"
+        });
+
+    }catch(e){}
+
+    window.location.href="/login.html";
+}
+
+
+async function createProduct(){
+    // ========================================
+    // STEP 5G-31 PRODUCT LOCATION
+    // ========================================
+
+    let latitude = null;
+    let longitude = null;
+
+    try {
+        const meResponse = await fetch("/api/me");
+        const meResult = await meResponse.json();
+
+        if (
+            meResult.success &&
+            meResult.loggedIn &&
+            meResult.user
+        ) {
+            latitude = meResult.user.latitude ?? null;
+            longitude = meResult.user.longitude ?? null;
+        }
+
+    } catch (locationError) {
+
+        console.log(
+            "ℹ️ Saved user location unavailable:",
+            locationError.message
+        );
+
+    }
+
+
+
+    const message =
+        document.getElementById("productMessage");
+
+    const data = {
+        name: document.getElementById("productName").value.trim(),
+        category: document.getElementById("productCategory").value.trim(),
+        subcategory: document.getElementById("productSubcategory").value.trim(),
+        description: document.getElementById("productDescription").value.trim(),
+        price: Number(document.getElementById("productPrice").value) || 0,
+        unit: document.getElementById("productUnit").value.trim(),
+        district: document.getElementById("productDistrict").value.trim(),
+        upazila: document.getElementById("productUpazila").value.trim(),
+        union: document.getElementById("productUnion").value.trim(),
+        village: document.getElementById("productVillage").value.trim(),
+
+        benefits: Array.from({length: 7}, (_, i) =>
+            document.getElementById("productBenefit" + (i + 1)).value.trim()
+        ).filter(Boolean),
+
+
+        latitude: latitude,
+        longitude: longitude    };
+
+    if(!data.name){
+        message.textContent = "❌ পণ্যের নাম লিখুন।";
+        return;
+    }
+
+    message.textContent = "⏳ পণ্য সংরক্ষণ হচ্ছে...";
+
+    try{
+
+        const response = await fetch("/api/products", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        if(!result.success){
+
+            message.textContent =
+                "❌ " + (result.message || "পণ্য সংরক্ষণ করা যায়নি।");
+
+            return;
+        }
+
+        message.textContent =
+            "✅ পণ্য সফলভাবে সংরক্ষণ হয়েছে। Admin Approval-এর অপেক্ষায় আছে।";
+
+        document.getElementById("productName").value = "";
+        document.getElementById("productCategory").value = "";
+        document.getElementById("productSubcategory").value = "";
+        document.getElementById("productDescription").value = "";
+        document.getElementById("productPrice").value = "";
+        document.getElementById("productUnit").value = "";
+
+        await loadMyProducts();
+
+    }catch(error){
+
+        console.error(error);
+
+        message.textContent =
+            "❌ Server-এর সাথে যোগাযোগ করা যাচ্ছে না।";
+    }
+}
+
+async function createService(){
+
+    const message =
+        document.getElementById("serviceMessage");
+
+    const data = {
+
+        name:
+            document.getElementById("serviceName").value.trim(),
+
+        category:
+            document.getElementById("serviceCategory").value.trim(),
+
+        subcategory:
+            document.getElementById("serviceSubcategory").value.trim(),
+
+        description:
+            document.getElementById("serviceDescription").value.trim(),
+
+        price:
+            Number(
+                document.getElementById("servicePrice").value
+            ) || 0,
+
+        priceType:
+            document.getElementById("servicePriceType").value,
+
+        district:
+            document.getElementById("serviceDistrict").value.trim(),
+
+        upazila:
+            document.getElementById("serviceUpazila").value.trim(),
+
+        union:
+            document.getElementById("serviceUnion").value.trim(),
+
+        village:
+            document.getElementById("serviceVillage").value.trim(),
+
+        benefits: Array.from({length: 7}, (_, i) =>
+            document.getElementById("serviceBenefit" + (i + 1)).value.trim()
+        ).filter(Boolean),
+
+    };
+
+
+    if(!data.name){
+
+        message.textContent =
+            "❌ সেবার নাম লিখুন।";
+
+        return;
+    }
+
+
+    if(!data.category){
+
+        message.textContent =
+            "❌ সেবার ক্যাটাগরি নির্বাচন করুন।";
+
+        return;
+    }
+
+
+    if(!data.description){
+
+        message.textContent =
+            "❌ সেবার বিস্তারিত লিখুন।";
+
+        return;
+    }
+
+
+
+    message.textContent =
+        "⏳ সেবা সংরক্ষণ হচ্ছে...";
+
+
+    try{
+
+        const response =
+            await fetch("/api/services", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body:
+                    JSON.stringify(data)
+            });
+
+
+        const result =
+            await response.json();
+
+
+        if(!result.success){
+
+            message.textContent =
+                "❌ " +
+                (
+                    result.message ||
+                    "সেবা সংরক্ষণ করা যায়নি।"
+                );
+
+            return;
+        }
+
+
+        message.textContent =
+            "⏳ সেবা সংরক্ষণ হয়েছে। ১ টাকা Listing Fee তৈরি হচ্ছে...";
+
+
+        const serviceId =
+            result.service._id;
+
+
+        const paymentResponse =
+            await fetch(
+                "/api/payment/service/create",
+                {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body:
+                        JSON.stringify({
+                            serviceId
+                        })
+                }
+            );
+
+
+        const paymentResult =
+            await paymentResponse.json();
+
+
+        if(!paymentResult.success){
+
+            message.textContent =
+                "⚠️ সেবা তৈরি হয়েছে, কিন্তু ১ টাকা Payment তৈরি হয়নি। " +
+                (
+                    paymentResult.message ||
+                    ""
+                );
+
+            await loadMyServices();
+
+            return;
+        }
+
+
+        message.textContent =
+            "✅ সেবা সংরক্ষণ হয়েছে। এখন ১ টাকা Payment করুন।";
+
+
+        document.getElementById("serviceName").value = "";
+        document.getElementById("serviceCategory").value = "";
+        document.getElementById("serviceSubcategory").value = "";
+        document.getElementById("serviceDescription").value = "";
+        document.getElementById("servicePrice").value = "";
+        document.getElementById("servicePriceType").value = "negotiable";
+        document.getElementById("serviceDistrict").value = "";
+        document.getElementById("serviceUpazila").value = "";
+        document.getElementById("serviceUnion").value = "";
+        document.getElementById("serviceVillage").value = "";
+
+
+        await loadMyServices();
+
+
+    }catch(error){
+
+        console.error(error);
+
+        message.textContent =
+            "❌ Server-এর সাথে যোগাযোগ করা যাচ্ছে না।";
+    }
+}
+
+
+async function completeServicePayment(paymentId){
+
+    if(!paymentId){
+
+        alert(
+            "Payment ID পাওয়া যায়নি।"
+        );
+
+        return;
+    }
+
+
+    const transactionId =
+        prompt(
+            "Transaction ID দিন (যদি থাকে):"
+        ) || "";
+
+
+    try{
+
+        const response =
+            await fetch(
+                "/api/payment/service/complete",
+                {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body:
+                        JSON.stringify({
+                            paymentId,
+                            transactionId
+                        })
+                }
+            );
+
+
+        const result =
+            await response.json();
+
+
+        if(!result.success){
+
+            alert(
+                "❌ " +
+                (
+                    result.message ||
+                    "Payment সফল হয়নি।"
+                )
+            );
+
+            return;
+        }
+
+
+        alert(
+            "✅ Service Payment সফল হয়েছে।\n\n" +
+            "এখন Admin Approval-এর অপেক্ষায় আছে।"
+        );
+
+
+        await loadMyServices();
+
+
+    }catch(error){
+
+        console.error(error);
+
+        alert(
+            "❌ Server-এর সাথে যোগাযোগ করা যাচ্ছে না।"
+        );
+    }
+}
+
+
+async function loadMyServices(){
+
+    const box =
+        document.getElementById("myServices");
+
+
+    if(!box) return;
+
+
+    box.innerHTML =
+        "⏳ Service Loading...";
+
+
+    try{
+
+        const response =
+            await fetch("/api/services/my");
+
+
+        const result =
+            await response.json();
+
+
+        if(!result.success){
+
+            box.innerHTML =
+                "❌ " +
+                (
+                    result.message ||
+                    "Service পাওয়া যায়নি।"
+                );
+
+            return;
+        }
+
+
+        if(
+            !result.services ||
+            result.services.length === 0
+        ){
+
+            box.innerHTML =
+                "📭 এখনো কোনো Service যোগ করেননি।";
+
+            return;
+        }
+
+
+        box.innerHTML =
+            result.services.map(service => {
+
+                const price =
+                    Number(service.price) || 0;
+
+
+                return `
+                    <div class="request">
+
+                        <h3>
+                            🔧 ${escapeHtml(
+                                service.name || ""
+                            )}
+                        </h3>
+
+                        <p>
+                            🏷️ ক্যাটাগরি:
+                            ${escapeHtml(
+                                service.category || "সাধারণ"
+                            )}
+                        </p>
+
+                        <p>
+                            💰 মূল্য:
+                            ${price} টাকা
+                            — ${escapeHtml(
+                                service.priceType || "negotiable"
+                            )}
+                        </p>
+
+                        <p>
+                            📝 ${escapeHtml(
+                                service.description || ""
+                            )}
+                        </p>
+
+                        <p>
+                            📍
+                            ${escapeHtml(
+                                service.village || ""
+                            )}
+                            ${escapeHtml(
+                                service.union || ""
+                            )}
+                            ${escapeHtml(
+                                service.upazila || ""
+                            )}
+                            ${escapeHtml(
+                                service.district || ""
+                            )}
+                        </p>
+
+                        <p>
+                            📞 ${escapeHtml(
+                                service.phone || ""
+                            )}
+                        </p>
+
+                        <p class="status">
+                            📌 Status:
+                            ${escapeHtml(
+                                service.status || ""
+                            )}
+                        </p>
+
+                        ${
+                            service.status === "payment_pending" &&
+                            service.paymentId
+                            ? `
+                                <button
+                                    type="button"
+                                    onclick="completeServicePayment(
+                                        '${service.paymentId}'
+                                    )"
+                                >
+                                    💳 ১ টাকা Payment করুন
+                                </button>
+                            `
+                            : ""
+                        }
+
+                        ${
+                            service.status === "paid"
+                            ? `
+                                <p>
+                                    ⏳ Admin Approval-এর অপেক্ষায়...
+                                </p>
+                            `
+                            : ""
+                        }
+
+                        ${
+                            service.status === "approved"
+                            ? `
+                                <p>
+                                    📢 Service Approved হয়েছে।
+                                </p>
+                            `
+                            : ""
+                        }
+
+                        ${
+                            service.status === "published"
+                            ? `
+                                <p>
+                                    ✅ Service Published হয়েছে।
+                                </p>
+                            `
+                            : ""
+                        }
+
+                    </div>
+                `;
+
+            }).join("");
+
+
+    }catch(error){
+
+        console.error(error);
+
+        box.innerHTML =
+            "❌ Server-এর সাথে যোগাযোগ করা যাচ্ছে না।";
+    }
+}
+
+
+async function loadPublishedServices(){
+
+    const box =
+        document.getElementById("publishedServices");
+
+
+    if(!box) return;
+
+
+    box.innerHTML =
+        "⏳ Published Service Loading...";
+
+
+    try{
+
+        const response =
+            await fetch("/api/services");
+
+
+        const result =
+            await response.json();
+
+
+        if(!result.success){
+
+            box.innerHTML =
+                "❌ " +
+                (
+                    result.message ||
+                    "Service পাওয়া যায়নি।"
+                );
+
+            return;
+        }
+
+
+        if(
+            !result.services ||
+            result.services.length === 0
+        ){
+
+            box.innerHTML =
+                "📭 এখনো কোনো প্রকাশিত Service নেই।";
+
+            return;
+        }
+
+
+        box.innerHTML =
+            result.services.map(service => {
+
+                const price =
+                    Number(service.price) || 0;
+
+
+                return `
+                    <div class="request">
+
+                        <h3>
+                            🔧 ${escapeHtml(
+                                service.name || ""
+                            )}
+                        </h3>
+
+                        <p>
+                            🏷️
+                            ${escapeHtml(
+                                service.category || "সাধারণ"
+                            )}
+                        </p>
+
+                        <p>
+                            💰
+                            ${price} টাকা
+                            — ${escapeHtml(
+                                service.priceType || "negotiable"
+                            )}
+                        </p>
+
+                        <p>
+                            📝
+                            ${escapeHtml(
+                                service.description || ""
+                            )}
+                        </p>
+
+                        <p>
+                            📍
+                            ${escapeHtml(
+                                service.village || ""
+                            )}
+                            ${escapeHtml(
+                                service.union || ""
+                            )}
+                            ${escapeHtml(
+                                service.upazila || ""
+                            )}
+                            ${escapeHtml(
+                                service.district || ""
+                            )}
+                        </p>
+
+                        <p>
+                            📞
+                            ${escapeHtml(
+                                service.phone || ""
+                            )}
+                        </p>
+
+                        <p>
+                            📌 Published
+                        </p>
+
+                    </div>
+                `;
+
+            }).join("");
+
+
+    }catch(error){
+
+        console.error(error);
+
+        box.innerHTML =
+            "❌ Server-এর সাথে যোগাযোগ করা যাচ্ছে না।";
+    }
+}
+
+
+function showServiceForm(){
+
+    const form =
+        document.getElementById("serviceForm");
+
+
+    if(form){
+
+        form.classList.toggle("hidden");
+    }
+}
+
+
+
+
+function showProductForm(){
+
+    const form =
+        document.getElementById("productForm");
+
+    if(form){
+        form.classList.toggle("hidden");
+    }
+}
+
+
+
+async function loadPublishedProducts(){
+
+    const box =
+        document.getElementById("publishedProducts");
+
+    if(!box) return;
+
+    box.innerHTML = "⏳ Published Product Loading...";
+
+    try{
+
+        const response =
+            await fetch("/api/products");
+
+        const result =
+            await response.json();
+
+        if(!result.success){
+
+            box.innerHTML =
+                "❌ " + (result.message || "Product পাওয়া যায়নি।");
+
+            return;
+        }
+
+        if(!result.products || result.products.length === 0){
+
+            box.innerHTML =
+                "📭 এখনো কোনো প্রকাশিত Product নেই।";
+
+            return;
+        }
+
+        box.innerHTML =
+            result.products.map(product => {
+
+                const price =
+                    Number(product.price) || 0;
+
+                const owner =
+                    product.owner || {};
+
+                return `
+                    <div class="request">
+
+                        <h3>
+                            🛒 ${escapeHtml(product.name || "")}
+                        </h3>
+
+                        <p>
+                            🏷️ ক্যাটাগরি:
+                            ${escapeHtml(product.category || "সাধারণ")}
+                        </p>
+
+                        <p>
+                            📂 সাব-ক্যাটাগরি:
+                            ${escapeHtml(product.subcategory || "সাধারণ")}
+                        </p>
+
+                        <p>
+                            💰 দাম: ${price} টাকা
+                            ${product.unit ? "/" + escapeHtml(product.unit) : ""}
+                        </p>
+
+                        <p>
+                            📍
+                            ${escapeHtml(product.village || "")}
+                            ${escapeHtml(product.union || "")}
+                            ${escapeHtml(product.upazila || "")}
+                            ${escapeHtml(product.district || "")}
+                        </p>
+
+                        <p>
+                            👤
+                            ${escapeHtml(owner.name || "Provider")}
+                        </p>
+
+                        <p>
+                            📞
+                            ${escapeHtml(product.phone || owner.phone || "")}
+                        </p>
+
+                        <p class="status">
+                            📌 Published
+                        </p>
+
+                        <button
+                            type="button"
+                            onclick="selectProductForMatch('${product._id}')"
+                        >
+                            🤝 এই পণ্য দিয়ে প্রয়োজন পূরণ করতে চাই
+                        </button>
+
+                    </div>
+                `;
+            }).join("");
+
+    }catch(error){
+
+        console.error(error);
+
+        box.innerHTML =
+            "❌ Server-এর সাথে যোগাযোগ করা যাচ্ছে না।";
+    }
+}
+
+
+async function completeProductPayment(paymentId){
+
+    if(!paymentId){
+        alert("Payment ID পাওয়া যায়নি।");
+        return;
+    }
+
+    const transactionId =
+        prompt("Transaction ID দিন (যদি থাকে):") || "";
+
+    try{
+
+        const response =
+            await fetch("/api/payment/product/complete", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    paymentId,
+                    transactionId
+                })
+            });
+
+        const result =
+            await response.json();
+
+        if(!result.success){
+
+            alert(
+                "❌ " +
+                (result.message || "Payment সফল হয়নি।")
+            );
+
+            return;
+        }
+
+        alert(
+            "✅ Product Payment সফল হয়েছে।\\n\\n" +
+            "এখন Admin Approval-এর অপেক্ষায় আছে।"
+        );
+
+        await loadMyProducts();
+
+    }catch(error){
+
+        console.error(error);
+
+        alert(
+            "❌ Server-এর সাথে যোগাযোগ করা যাচ্ছে না।"
+        );
+    }
+}
+
+
+async function loadMyProducts(){
+
+    const box =
+        document.getElementById("myProducts");
+
+    if(!box) return;
+
+    box.innerHTML = "⏳ Product Loading...";
+
+    try{
+
+        const response =
+            await fetch("/api/products/my");
+
+        const result =
+            await response.json();
+
+        if(!result.success){
+
+            box.innerHTML =
+                "❌ " + (result.message || "Product পাওয়া যায়নি।");
+
+            return;
+        }
+
+        if(!result.products || result.products.length === 0){
+
+            box.innerHTML =
+                "📭 এখনো কোনো Product যোগ করেননি।";
+
+            return;
+        }
+
+        box.innerHTML =
+            result.products.map(product => {
+
+                const price =
+                    Number(product.price) || 0;
+
+                return `
+                    <div class="request">
+
+                        <h3>
+                            🛒 ${escapeHtml(product.name || "")}
+                        </h3>
+
+                        <p>
+                            🏷️ ক্যাটাগরি:
+                            ${escapeHtml(product.category || "সাধারণ")}
+                        </p>
+
+                        <p>
+                            📂 সাব-ক্যাটাগরি:
+                            ${escapeHtml(product.subcategory || "সাধারণ")}
+                        </p>
+
+                        <p>
+                            💰 দাম: ${price} টাকা
+                            ${product.unit ? "/" + escapeHtml(product.unit) : ""}
+                        </p>
+
+                        <p>
+                            📍
+                            ${escapeHtml(product.village || "")}
+                            ${escapeHtml(product.union || "")}
+                            ${escapeHtml(product.upazila || "")}
+                            ${escapeHtml(product.district || "")}
+                        </p>
+
+                        <p class="status">
+                            📌 Status:
+                            ${escapeHtml(product.status || "")}
+                        </p>
+
+                        ${product.status === "payment_pending" && product.paymentId ? `
+                            <button
+                                type="button"
+                                onclick="completeProductPayment('${product.paymentId}')"
+                            >
+                                💳 ১ টাকা Payment করুন
+                            </button>
+                        ` : ""}
+
+                        ${product.status === "paid" ? `
+                            <p>⏳ Admin Approval-এর অপেক্ষায়...</p>
+                        ` : ""}
+
+                        ${product.status === "approved" ? `
+                            <p>📢 Product Approved হয়েছে।</p>
+                        ` : ""}
+
+                        ${product.status === "published" ? `
+                            <p>✅ Product Published হয়েছে।</p>
+                        ` : ""}
+
+                    </div>
+                `;
+
+            }).join("");
+
+    }catch(error){
+
+        console.error(error);
+
+        box.innerHTML =
+            "❌ Server-এর সাথে যোগাযোগ করা যাচ্ছে না।";
+    }
+}
+
+
+loadMe();
+loadRequests();
+loadOpenRequests();
+
+
+
+async function loadProductCategoryArchitecture() {
+    try {
+        const response = await fetch("/api/categories");
+        const data = await response.json();
+
+        if (!data.success || !Array.isArray(data.categories)) {
+            throw new Error("Category data পাওয়া যায়নি");
+        }
+
+        const categorySelect =
+            document.getElementById("productCategory");
+
+        const subcategorySelect =
+            document.getElementById("productSubcategory");
+
+        if (!categorySelect || !subcategorySelect) return;
+
+        categorySelect.innerHTML =
+            '<option value="">ক্যাটাগরি নির্বাচন করুন</option>';
+
+        data.categories.forEach(category => {
+            const option = document.createElement("option");
+
+            option.value = category.name;
+            option.textContent = category.name;
+
+            categorySelect.appendChild(option);
+        });
+
+        categorySelect.addEventListener("change", () => {
+            const selected = data.categories.find(
+                category => category.name === categorySelect.value
+            );
+
+            subcategorySelect.innerHTML =
+                '<option value="">সাব-ক্যাটাগরি নির্বাচন করুন</option>';
+
+            if (!selected) return;
+
+            selected.subcategories.forEach(subcategory => {
+                const option = document.createElement("option");
+
+                option.value = subcategory;
+                option.textContent = subcategory;
+
+                subcategorySelect.appendChild(option);
+            });
+        });
+
+        console.log(
+            "✅ Product category architecture loaded:",
+            data.categories.length,
+            "categories /",
+            data.categories.reduce(
+                (total, category) =>
+                    total + category.subcategories.length,
+                0
+            ),
+            "subcategories"
+        );
+    } catch (error) {
+        console.error(
+            "❌ Product category architecture load failed:",
+            error
+        );
+    }
+}
+
+async function loadServiceCategoryArchitecture() {
+
+    try {
+
+        const response =
+            await fetch("/api/categories");
+
+        const data =
+            await response.json();
+
+        if (
+            !data.success ||
+            !Array.isArray(data.categories)
+        ) {
+            throw new Error(
+                "Category data পাওয়া যায়নি"
+            );
+        }
+
+        const categorySelect =
+            document.getElementById(
+                "serviceCategory"
+            );
+
+        const subcategorySelect =
+            document.getElementById(
+                "serviceSubcategory"
+            );
+
+        if (
+            !categorySelect ||
+            !subcategorySelect
+        ) {
+            return;
+        }
+
+        categorySelect.innerHTML =
+            '<option value="">ক্যাটাগরি নির্বাচন করুন</option>';
+
+        data.categories.forEach(category => {
+
+            const option =
+                document.createElement("option");
+
+            option.value =
+                category.name;
+
+            option.textContent =
+                category.name;
+
+            categorySelect.appendChild(option);
+        });
+
+        subcategorySelect.innerHTML =
+            '<option value="">আগে ক্যাটাগরি নির্বাচন করুন</option>';
+
+        categorySelect.onchange = function() {
+
+            const selected =
+                data.categories.find(
+                    category =>
+                        category.name ===
+                        categorySelect.value
+                );
+
+            subcategorySelect.innerHTML =
+                '<option value="">সাব-ক্যাটাগরি নির্বাচন করুন</option>';
+
+            if (!selected) return;
+
+            (selected.subcategories || [])
+                .forEach(subcategory => {
+
+                    const option =
+                        document.createElement(
+                            "option"
+                        );
+
+                    option.value =
+                        subcategory;
+
+                    option.textContent =
+                        subcategory;
+
+                    subcategorySelect.appendChild(
+                        option
+                    );
+                });
+        };
+
+        console.log(
+            "✅ Service category architecture loaded:",
+            data.categories.length,
+            "categories"
+        );
+
+    } catch (error) {
+
+        console.error(
+            "❌ Service category architecture load failed:",
+            error
+        );
+    }
+}
+
+
+
+async function loadCategoryArchitecture() {
+    try {
+        const response = await fetch("/api/categories");
+        const data = await response.json();
+
+        if (!data.success || !Array.isArray(data.categories)) {
+            throw new Error("Category data পাওয়া যায়নি");
+        }
+
+        const categorySelect = document.getElementById("category");
+        const subcategorySelect = document.getElementById("subcategory");
+
+        if (!categorySelect || !subcategorySelect) return;
+
+        categorySelect.innerHTML =
+            '<option value="">ক্যাটাগরি নির্বাচন করুন</option>';
+
+        data.categories.forEach(category => {
+            const option = document.createElement("option");
+            option.value = category.name;
+            option.textContent = category.name;
+            categorySelect.appendChild(option);
+        });
+
+        categorySelect.addEventListener("change", () => {
+            const selected =
+                data.categories.find(
+                    category => category.name === categorySelect.value
+                );
+
+            subcategorySelect.innerHTML =
+                '<option value="">সাব-ক্যাটাগরি নির্বাচন করুন</option>';
+
+            if (!selected) return;
+
+            selected.subcategories.forEach(subcategory => {
+                const option = document.createElement("option");
+                option.value = subcategory;
+                option.textContent = subcategory;
+                subcategorySelect.appendChild(option);
+            });
+        });
+
+        console.log(
+            "✅ Category architecture loaded:",
+            data.categories.length,
+            "categories /",
+            data.categories.reduce(
+                (total, category) =>
+                    total + category.subcategories.length,
+                0
+            ),
+            "subcategories"
+        );
+    } catch (error) {
+        console.error("❌ Category architecture load failed:", error);
+    }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    loadCategoryArchitecture();
+
+    loadProductCategoryArchitecture();
+
+    loadServiceCategoryArchitecture();
+
+    loadMyServices();
+
+    loadPublishedServices();
+
+});
+
+</script>
+
+
+<script>
+function showProviderSection(){
+
+    const productForm =
+        document.getElementById("productForm");
+
+    const serviceForm =
+        document.getElementById("serviceForm");
+
+    const openRequests =
+        document.getElementById("openRequests");
+
+    const requestForm =
+        document.getElementById("requestForm");
+
+
+    if(requestForm)
+        requestForm.classList.add("hidden");
+
+
+    if(productForm)
+        productForm.classList.remove("hidden");
+
+
+    if(serviceForm)
+        serviceForm.classList.remove("hidden");
+
+
+    if(productForm){
+
+        productForm.scrollIntoView({
+            behavior:"smooth",
+            block:"start"
+        });
+
+    }
+
+
+    if(openRequests){
+
+        setTimeout(function(){
+
+            openRequests.scrollIntoView({
+                behavior:"smooth",
+                block:"start"
+            });
+
+        },300);
+
+    }
+
+
+    loadMyServices();
+    loadPublishedServices();
+}
+
+function showRequesterSection(){
+    const requestForm=document.getElementById("requestForm");
+    const productForm=document.getElementById("productForm");
+    if(productForm) productForm.classList.add("hidden");
+    if(requestForm){
+        requestForm.classList.remove("hidden");
+        requestForm.scrollIntoView({behavior:"smooth",block:"start"});
+    }else{
+        alert("📢 প্রয়োজন পোস্ট করার অংশ পাওয়া যায়নি।");
+    }
+}
+
+</script>
+
+
+
+<!-- PROYOJONX_FINAL_TWO_PARTY_UI_V2 -->
+
+<style>
+.px2-party-layout{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+    width:100%;
+}
+
+.px2-party-side{
+    min-width:0;
+}
+
+.px2-main-btn{
+    width:100%;
+    min-height:105px;
+    border:0;
+    border-radius:16px;
+    padding:14px 8px;
+    color:#fff;
+    font-size:16px;
+    font-weight:bold;
+    cursor:pointer;
+    box-shadow:0 5px 0 rgba(0,0,0,.25);
+}
+
+.px2-provider{
+    background:linear-gradient(135deg,#00c853,#087f5b);
+}
+
+.px2-requester{
+    background:linear-gradient(135deg,#2979ff,#1565c0);
+}
+
+.px2-refresh{
+    width:100%;
+    border:0;
+    border-radius:14px;
+    padding:14px 8px;
+    margin-top:12px;
+    color:#fff;
+    font-size:14px;
+    font-weight:bold;
+    cursor:pointer;
+    box-shadow:0 4px 0 rgba(0,0,0,.25);
+}
+
+.px2-provider-refresh{
+    background:linear-gradient(135deg,#00e676,#009b63);
+}
+
+.px2-requester-refresh{
+    background:linear-gradient(135deg,#42a5f5,#1976d2);
+}
+
+.px2-hidden{
+    display:none !important;
+}
+
+.px2-full-work{
+    width:100%;
+    margin-top:18px;
+}
+
+.px2-full-work > .card{
+    width:100%;
+}
+
+@media(max-width:600px){
+    .px2-party-layout{
+        gap:8px;
+    }
+
+    .px2-main-btn{
+        min-height:105px;
+        font-size:13px;
+        padding:12px 5px;
+    }
+
+    .px2-refresh{
+        font-size:12px;
+        padding:12px 4px;
+    }
+}
+</style>
+
+<script>
+(function(){
+
+function cardOf(id){
+    const el=document.getElementById(id);
+    return el ? el.closest(".card") : null;
+}
+
+function hideCard(id){
+    const c=cardOf(id);
+    if(c) c.classList.add("px2-hidden");
+}
+
+function showCard(id){
+    const c=cardOf(id);
+    if(c) c.classList.remove("px2-hidden");
+}
+
+function hideAllWork(){
+
+    [
+        "requestForm",
+        "myProducts",
+        "productForm",
+        "serviceSection",
+        "serviceForm",
+        "publishedProducts",
+        "publishedServices",
+        "openRequests",
+        "requests",
+        "myMatchesSection"
+    ].forEach(hideCard);
+}
+
+function setup(){
+
+    const main=document.getElementById("mainChoiceButtons");
+
+    if(!main){
+        console.error("❌ mainChoiceButtons পাওয়া যায়নি");
+        return;
+    }
+
+    if(document.getElementById("px2PartyLayout")){
+        return;
+    }
+
+    const buttons=main.querySelectorAll(".main-choice-btn");
+
+    if(buttons.length<2){
+        console.error("❌ মূল ২টি বাটন পাওয়া যায়নি");
+        return;
+    }
+
+    const provider=buttons[0];
+    const requester=buttons[1];
+
+    /*
+     * মূল ২টি বাটনকে দুই পাশে রাখা
+     */
+    const layout=document.createElement("div");
+    layout.id="px2PartyLayout";
+    layout.className="px2-party-layout";
+
+    const providerSide=document.createElement("div");
+    providerSide.className="px2-party-side";
+
+    const requesterSide=document.createElement("div");
+    requesterSide.className="px2-party-side";
+
+    providerSide.appendChild(provider);
+    requesterSide.appendChild(requester);
+
+    layout.appendChild(providerSide);
+    layout.appendChild(requesterSide);
+
+    main.insertBefore(layout, main.querySelector(".main-choice-buttons"));
+
+    /*
+     * পুরোনো main-choice-buttons container আর প্রয়োজন নেই
+     */
+    const oldGrid=main.querySelector(".main-choice-buttons");
+    if(oldGrid){
+        oldGrid.remove();
+    }
+
+    /*
+     * দুই পক্ষের Refresh button
+     */
+    const providerRefresh=document.createElement("button");
+    providerRefresh.type="button";
+    providerRefresh.className=
+        "px2-refresh px2-provider-refresh px2-hidden";
+    providerRefresh.id="px2ProviderRefresh";
+    providerRefresh.textContent=
+        "🛒 আমার পণ্যগুলি দেখি (Refresh)";
+
+    const requesterRefresh=document.createElement("button");
+    requesterRefresh.type="button";
+    requesterRefresh.className=
+        "px2-refresh px2-requester-refresh px2-hidden";
+    requesterRefresh.id="px2RequesterRefresh";
+    requesterRefresh.textContent=
+        "📢 আমার প্রয়োজনীয় পণ্যগুলি দেখি (Refresh)";
+
+    providerSide.appendChild(providerRefresh);
+    requesterSide.appendChild(requesterRefresh);
+
+    /*
+     * Dashboard-কে আলাদা card বানিয়ে Requester side-এর নিচে রাখা
+     */
+    const outerCard=main.closest(".card");
+
+    if(outerCard){
+
+        const dashboardNodes=[];
+
+        let found=false;
+
+        [...outerCard.children].forEach(el=>{
+
+            if(el===main){
+                found=true;
+                return;
+            }
+
+            if(found){
+                dashboardNodes.push(el);
+            }
+
+        });
+
+        if(dashboardNodes.length){
+
+            const dashboardCard=document.createElement("div");
+            dashboardCard.className="card px2-hidden";
+            dashboardCard.id="px2MyDashboard";
+
+            dashboardNodes.forEach(el=>{
+                dashboardCard.appendChild(el);
+            });
+
+            requesterSide.appendChild(dashboardCard);
+        }
+    }
+
+    /*
+     * কাজের অংশগুলো আলাদা full-width area-তে রাখা
+     */
+    const workArea=document.createElement("div");
+    workArea.id="px2FullWorkArea";
+    workArea.className="px2-full-work";
+
+    const mainContainer=outerCard ?
+        outerCard.parentNode :
+        main.parentNode;
+
+    if(mainContainer){
+        mainContainer.appendChild(workArea);
+    }
+
+    /*
+     * Existing cards-কে work area-তে নেওয়া
+     */
+    [
+        "requestForm",
+        "myProducts",
+        "productForm",
+        "serviceSection",
+        "serviceForm",
+        "publishedProducts",
+        "publishedServices",
+        "openRequests",
+        "requests",
+        "myMatchesSection"
+    ].forEach(id=>{
+
+        const c=cardOf(id);
+
+        if(c && c.parentNode!==workArea){
+            workArea.appendChild(c);
+        }
+
+    });
+
+    /*
+     * শুরুতে শুধু মূল ২টি button
+     */
+    hideAllWork();
+
+    /*
+     * Provider main
+     */
+    provider.onclick=function(){
+
+        hideAllWork();
+
+        providerRefresh.classList.remove("px2-hidden");
+        requesterRefresh.classList.add("px2-hidden");
+
+        const dash=document.getElementById("px2MyDashboard");
+        if(dash) dash.classList.add("px2-hidden");
+    };
+
+    /*
+     * Requester main
+     */
+    requester.onclick=function(){
+
+        hideAllWork();
+
+        requesterRefresh.classList.remove("px2-hidden");
+        providerRefresh.classList.add("px2-hidden");
+
+        const dash=document.getElementById("px2MyDashboard");
+        if(dash) dash.classList.remove("px2-hidden");
+    };
+
+    /*
+     * Provider Refresh
+     */
+    providerRefresh.onclick=function(){
+
+        hideAllWork();
+
+        const productCard=cardOf("myProducts");
+
+        if(productCard){
+            productCard.classList.remove("px2-hidden");
+
+            if(typeof loadMyProducts==="function"){
+                loadMyProducts();
+            }
+
+            productCard.scrollIntoView({
+                behavior:"smooth",
+                block:"start"
+            });
+        }
+    };
+
+    /*
+     * Requester Refresh
+     */
+    requesterRefresh.onclick=function(){
+
+        hideAllWork();
+
+        const requestCard=cardOf("requests");
+
+        if(requestCard){
+
+            requestCard.classList.remove("px2-hidden");
+
+            if(typeof loadRequests==="function"){
+                loadRequests();
+            }
+
+            requestCard.scrollIntoView({
+                behavior:"smooth",
+                block:"start"
+            });
+
+        }else{
+
+            const formCard=cardOf("requestForm");
+
+            if(formCard){
+                formCard.classList.remove("px2-hidden");
+
+                if(typeof loadRequests==="function"){
+                    loadRequests();
+                }
+
+                formCard.scrollIntoView({
+                    behavior:"smooth",
+                    block:"start"
+                });
+            }
+        }
+    };
+
+    console.log("✅ PROYOJONX FINAL TWO PARTY UI V2 READY");
+}
+
+if(document.readyState==="loading"){
+    document.addEventListener("DOMContentLoaded",setup);
+}else{
+    setup();
+}
+
+})();
+</script>
+\n<!-- PROYOJONX_FOUR_MAIN_BUTTONS_ALWAYS_VISIBLE --><style>#px2ProviderRefresh,#px2RequesterRefresh{display:block!important;visibility:visible!important;opacity:1!important}.px2-refresh{display:block!important}</style><script>(function(){function f(){["px2ProviderRefresh","px2RequesterRefresh"].forEach(id=>{const e=document.getElementById(id);if(e){e.classList.remove("px2-hidden");e.style.display="block";e.style.visibility="visible";e.style.opacity="1"}})}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",f);else f()})();</script>\n<!-- PROYOJONX_MAIN_ADD_BUTTON_ACTIONS --><script>(function(){function card(id){const e=document.getElementById(id);return e?e.closest(".card"):null}function hide(id){const c=card(id);if(c)c.classList.add("px2-hidden")}function show(id){const c=card(id);if(c)c.classList.remove("px2-hidden")}function setup(){const m=document.getElementById("mainChoiceButtons");if(!m)return;const b=m.querySelectorAll(".main-choice-btn");if(b.length<2)return;const provider=b[0],requester=b[1];provider.addEventListener("click",function(){hide("requestForm");hide("serviceSection");hide("serviceForm");hide("publishedProducts");hide("publishedServices");hide("requests");hide("myMatchesSection");show("myProducts");const c=card("myProducts");if(c)c.querySelectorAll("button").forEach(x=>{if(x.textContent.includes("নতুন পণ্য")||x.textContent.includes("নতুন পন্য"))x.style.display="block"})});requester.addEventListener("click",function(){hide("myProducts");hide("productForm");hide("serviceSection");hide("serviceForm");hide("publishedProducts");hide("publishedServices");hide("requests");hide("myMatchesSection");show("requestForm");const c=card("requestForm");if(c){const btn=c.querySelector("button[onclick*=createRequest]");if(btn)btn.style.display="block"}})}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",setup);else setup()})();</script>\n
+
+<!-- PROYOJONX_PROVIDER_ADD_CLEAN_FINAL_V1 -->
+
+<style>
+#pxCleanProviderAdd{
+    display:none;
+    width:100%;
+    border:0;
+    border-radius:14px;
+    padding:14px 8px;
+    margin-top:12px;
+    color:#fff;
+    background:linear-gradient(135deg,#00c853,#087f5b);
+    font-size:15px;
+    font-weight:bold;
+    cursor:pointer;
+    box-shadow:0 4px 0 rgba(0,0,0,.22);
+}
+
+#pxCleanProviderAdd.px-show{
+    display:block !important;
+}
+</style>
+
+<script>
+(function(){
+
+function setupCleanProviderAdd(){
+
+    const main = document.getElementById("mainChoiceButtons");
+    if(!main) return;
+
+    const buttons = main.querySelectorAll(".main-choice-btn");
+    if(buttons.length < 2) return;
+
+    const provider = buttons[0];
+
+    if(document.getElementById("pxCleanProviderAdd"))
+        return;
+
+    const addButton = document.createElement("button");
+
+    addButton.type = "button";
+    addButton.id = "pxCleanProviderAdd";
+    addButton.textContent = "➕ আপনার নতুন পণ্য যোগ করুন";
+
+    provider.parentNode.insertBefore(
+        addButton,
+        provider.nextSibling
+    );
+
+    /*
+     * Provider মূল বাটন চাপলে শুধু Add Product button দেখাবে।
+     * স্থায়ী Refresh button ও Logout button অপরিবর্তিত থাকবে।
+     */
+    provider.addEventListener("click", function(){
+
+        addButton.classList.add("px-show");
+
+    }, true);
+
+    /*
+     * Add Product চাপলে আসল Product Form খুলবে।
+     */
+    addButton.addEventListener("click", function(e){
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        if(typeof showProductForm === "function"){
+            showProductForm();
+        }
+
+    });
+
+    console.log("✅ CLEAN PROVIDER ADD BUTTON READY");
+}
+
+if(document.readyState === "loading"){
+    document.addEventListener(
+        "DOMContentLoaded",
+        setupCleanProviderAdd
+    );
+}else{
+    setupCleanProviderAdd();
+}
+
+})();
+</script>
+\n
+<!-- PROYOJONX_REQUESTER_ADD_CLEAN_FINAL_V1 -->
+
+<style>
+#pxCleanRequesterAdd{
+    display:none;
+    width:100%;
+    border:0;
+    border-radius:14px;
+    padding:14px 8px;
+    margin-top:12px;
+    color:#fff;
+    background:linear-gradient(135deg,#42a5f5,#1565c0);
+    font-size:15px;
+    font-weight:bold;
+    cursor:pointer;
+    box-shadow:0 4px 0 rgba(0,0,0,.22);
+}
+
+#pxCleanRequesterAdd.px-show{
+    display:block !important;
+}
+</style>
+
+<script>
+(function(){
+
+function setupCleanRequesterAdd(){
+
+    const main = document.getElementById("mainChoiceButtons");
+    if(!main) return;
+
+    const buttons = main.querySelectorAll(".main-choice-btn");
+
+    if(buttons.length < 2) return;
+
+    const requester = buttons[1];
+
+    if(document.getElementById("pxCleanRequesterAdd"))
+        return;
+
+    const addButton = document.createElement("button");
+
+    addButton.type = "button";
+    addButton.id = "pxCleanRequesterAdd";
+    addButton.textContent = "➕ নতুন প্রয়োজন পোস্ট করুন";
+
+    requester.parentNode.insertBefore(
+        addButton,
+        requester.nextSibling
+    );
+
+    /*
+     * Requester মূল বাটন চাপলে Action button দেখাবে।
+     */
+    requester.addEventListener("click", function(){
+
+        addButton.classList.add("px-show");
+
+    }, true);
+
+    /*
+     * নতুন প্রয়োজন পোস্ট করার Form খুলবে।
+     */
+    addButton.addEventListener("click", function(e){
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        if(typeof showRequestForm === "function"){
+            showRequestForm();
+        }
+
+    });
+
+    console.log("✅ CLEAN REQUESTER ADD BUTTON READY");
+}
+
+if(document.readyState === "loading"){
+    document.addEventListener(
+        "DOMContentLoaded",
+        setupCleanRequesterAdd
+    );
+}else{
+    setupCleanRequesterAdd();
+}
+
+})();
+</script>
+\n
+<!-- PROYOJONX_FINAL_ACTION_LOGOUT_CONTROLLER_V1 -->
+
+<style>
+/* Action buttons শুরুতে সবসময় hidden */
+#pxCleanProviderAdd,
+#pxCleanRequesterAdd{
+    display:none !important;
+}
+
+#pxCleanProviderAdd.px-final-show,
+#pxCleanRequesterAdd.px-final-show{
+    display:block !important;
+}
+
+/* দুই পাশের Logout সবসময় দৃশ্যমান */
+.px-final-party-logout{
+    display:block !important;
+    visibility:visible !important;
+    opacity:1 !important;
+    width:100%;
+    border:0;
+    border-radius:14px;
+    padding:13px 8px;
+    margin-top:10px;
+    color:#fff;
+    background:linear-gradient(135deg,#ef5350,#b71c1c);
+    font-size:14px;
+    font-weight:bold;
+    cursor:pointer;
+    box-shadow:0 4px 0 rgba(0,0,0,.22);
+}
+</style>
+
+<script>
+(function(){
+
+function setupFinalActionLogoutController(){
+
+    const main =
+        document.getElementById("mainChoiceButtons");
+
+    if(!main) return;
+
+    const buttons =
+        main.querySelectorAll(".main-choice-btn");
+
+    if(buttons.length < 2) return;
+
+    const provider = buttons[0];
+    const requester = buttons[1];
+
+    const providerAdd =
+        document.getElementById("pxCleanProviderAdd");
+
+    const requesterAdd =
+        document.getElementById("pxCleanRequesterAdd");
+
+    /*
+     * শুরুতে দুই Action button লুকানো
+     */
+    if(providerAdd){
+        providerAdd.classList.remove("px-final-show");
+        providerAdd.style.setProperty(
+            "display",
+            "none",
+            "important"
+        );
+    }
+
+    if(requesterAdd){
+        requesterAdd.classList.remove("px-final-show");
+        requesterAdd.style.setProperty(
+            "display",
+            "none",
+            "important"
+        );
+    }
+
+    /*
+     * Provider চাপলে শুধু Provider Action
+     */
+    provider.addEventListener("click", function(){
+
+        if(providerAdd){
+            providerAdd.classList.add("px-final-show");
+            providerAdd.style.setProperty(
+                "display",
+                "block",
+                "important"
+            );
+        }
+
+        if(requesterAdd){
+            requesterAdd.classList.remove("px-final-show");
+            requesterAdd.style.setProperty(
+                "display",
+                "none",
+                "important"
+            );
+        }
+
+    });
+
+    /*
+     * Requester চাপলে শুধু Requester Action
+     */
+    requester.addEventListener("click", function(){
+
+        if(requesterAdd){
+            requesterAdd.classList.add("px-final-show");
+            requesterAdd.style.setProperty(
+                "display",
+                "block",
+                "important"
+            );
+        }
+
+        if(providerAdd){
+            providerAdd.classList.remove("px-final-show");
+            providerAdd.style.setProperty(
+                "display",
+                "none",
+                "important"
+            );
+        }
+
+    });
+
+    /*
+     * দুই পাশে স্থায়ী Logout
+     */
+    function addLogout(side, id){
+
+        if(document.getElementById(id))
+            return;
+
+        const btn =
+            document.createElement("button");
+
+        btn.type = "button";
+        btn.id = id;
+        btn.className = "px-final-party-logout";
+        btn.textContent = "🚪 Logout";
+
+        btn.addEventListener("click", function(){
+
+            if(typeof logout === "function"){
+                logout();
+            }
+
+        });
+
+        side.appendChild(btn);
+    }
+
+    addLogout(
+        provider.parentNode,
+        "pxFinalProviderLogout"
+    );
+
+    addLogout(
+        requester.parentNode,
+        "pxFinalRequesterLogout"
+    );
+
+    console.log(
+        "✅ FINAL ACTION + TWO LOGOUT CONTROLLER READY"
+    );
+}
+
+if(document.readyState === "loading"){
+    document.addEventListener(
+        "DOMContentLoaded",
+        setupFinalActionLogoutController
+    );
+}else{
+    setupFinalActionLogoutController();
+}
+
+})();
+</script>
+\n
+<!-- PROYOJONX_HIDE_OLD_PROVIDER_PRODUCT_CARD_V1 -->
+
+<style>
+/* পুরোনো নিচের My Products card সম্পূর্ণ লুকানো */
+#pxOldProviderProductsHidden{
+    display:none !important;
+}
+</style>
+
+<script>
+(function(){
+
+function setupHideOldProviderProducts(){
+
+    const main =
+        document.getElementById("mainChoiceButtons");
+
+    if(!main) return;
+
+    const buttons =
+        main.querySelectorAll(".main-choice-btn");
+
+    if(buttons.length < 2) return;
+
+    const provider = buttons[0];
+
+    const products =
+        document.getElementById("myProducts");
+
+    if(!products) return;
+
+    const card =
+        products.closest(".card");
+
+    if(!card) return;
+
+    card.id = "pxOldProviderProductsHidden";
+
+    /*
+     * Provider button চাপলেও পুরোনো My Products
+     * card কখনো প্রদর্শন হবে না।
+     */
+    provider.addEventListener("click", function(){
+
+        card.classList.add("px2-hidden");
+        card.style.setProperty(
+            "display",
+            "none",
+            "important"
+        );
+
+    }, true);
+
+    console.log(
+        "✅ OLD PROVIDER PRODUCT CARD HIDDEN"
+    );
+}
+
+if(document.readyState === "loading"){
+    document.addEventListener(
+        "DOMContentLoaded",
+        setupHideOldProviderProducts
+    );
+}else{
+    setupHideOldProviderProducts();
+}
+
+})();
+</script>
+\n
+<!-- PROYOJONX_RESTORE_8_STABLE_BUTTONS_CLEAN_V1 -->
+\n
+<!-- PROYOJONX_PROVIDER_ADD_ACTION_LINK_V1 -->
+
+<script>
+(function(){
+
+function connectProviderAddAction(){
+
+    const btn = document.getElementById("pxCleanProviderAdd");
+
+    if(!btn){
+        console.log("⚠️ Provider Add Button পাওয়া যায়নি");
+        return;
+    }
+
+    btn.addEventListener("click", function(e){
+
+        e.preventDefault();
+        e.stopImmediatePropagation();
+
+        if(typeof showProductForm === "function"){
+            showProductForm();
+
+            const form = document.getElementById("productForm");
+
+            if(form){
+                form.classList.remove("hidden");
+                form.classList.remove("px2-hidden");
+
+                form.style.setProperty(
+                    "display",
+                    "block",
+                    "important"
+                );
+
+                form.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start"
+                });
+            }
+
+            console.log("✅ নতুন পণ্য যোগ করার অপশন খোলা হয়েছে");
+
+        }else{
+            console.error("❌ showProductForm() পাওয়া যায়নি");
+        }
+
+    }, true);
+
+    console.log("✅ Provider Add Action Link V1 READY");
+}
+
+if(document.readyState === "loading"){
+    document.addEventListener(
+        "DOMContentLoaded",
+        connectProviderAddAction
+    );
+}else{
+    connectProviderAddAction();
+}
+
+})();
+</script>
+
+
+<!-- PROYOJONX_REMOVE_PROVIDER_SERVICE_MOBILE_SAFE_V2 -->
+
+<script>
+(function(){
+
+    console.log("✅ Product/Service creation: Mobile Number field disabled.");
+    console.log("✅ Address: District / Upazila / Union / Village preserved.");
+    console.log("🔒 Stable 8 buttons untouched.");
+
+})();
+</script>
+\n</body>
+</html>
+
+<!-- PROYOJONX_STEP4L_FINAL_8_BUTTON_3D_UI -->
+
+<style>
+/* ===== FIRST SCREEN CLEAN ===== */
+
+#mainChoiceButtons > h2,
+#mainChoiceButtons > p,
+#px2MyDashboard,
+#px2FullWorkArea{
+    display:none !important;
+}
+
+/* ===== TWO PARTY COLUMNS ===== */
+
+#px2PartyLayout{
+    display:grid !important;
+    grid-template-columns:1fr 1fr !important;
+    gap:16px !important;
+    width:100% !important;
+    margin:0 !important;
+    padding:0 !important;
+}
+
+#px2PartyLayout .px2-party-side{
+    display:flex !important;
+    flex-direction:column !important;
+    gap:12px !important;
+    width:100% !important;
+}
+
+/* ===== ALL 8 BUTTONS — 3D BASE ===== */
+
+#px2PartyLayout button,
+#px2PartyLayout .main-choice-btn,
+#px2ProviderRefresh,
+#px2RequesterRefresh,
+#pxCleanProviderAdd,
+#pxCleanRequesterAdd,
+#pxFinalProviderLogout,
+#pxFinalRequesterLogout{
+    width:100% !important;
+    min-height:72px !important;
+    border:0 !important;
+    border-radius:18px !important;
+    padding:14px 10px !important;
+    color:#fff !important;
+    font-size:14px !important;
+    font-weight:800 !important;
+    line-height:1.35 !important;
+    cursor:pointer !important;
+
+    transform:translateY(0) !important;
+
+    box-shadow:
+        0 7px 0 rgba(0,0,0,.30),
+        0 10px 18px rgba(0,0,0,.22),
+        inset 0 2px 2px rgba(255,255,255,.30),
+        inset 0 -4px 5px rgba(0,0,0,.18) !important;
+
+    text-shadow:
+        0 2px 2px rgba(0,0,0,.45) !important;
+
+    transition:
+        transform .12s ease,
+        box-shadow .12s ease,
+        filter .12s ease !important;
+}
+
+/* ===== PRESS EFFECT ===== */
+
+#px2PartyLayout button:active,
+#px2PartyLayout .main-choice-btn:active,
+#px2ProviderRefresh:active,
+#px2RequesterRefresh:active,
+#pxCleanProviderAdd:active,
+#pxCleanRequesterAdd:active,
+#pxFinalProviderLogout:active,
+#pxFinalRequesterLogout:active{
+    transform:translateY(5px) !important;
+
+    box-shadow:
+        0 2px 0 rgba(0,0,0,.30),
+        0 4px 8px rgba(0,0,0,.18),
+        inset 0 2px 2px rgba(255,255,255,.20),
+        inset 0 -3px 4px rgba(0,0,0,.20) !important;
+}
+
+/* ===== MAIN TWO BUTTONS ===== */
+
+#px2PartyLayout .main-choice-btn{
+    min-height:105px !important;
+    font-size:15px !important;
+}
+
+/* ===== PROVIDER SIDE COLORS ===== */
+
+#px2PartyLayout .px2-party-side:first-child
+.main-choice-btn{
+    background:linear-gradient(145deg,#00e676,#00a152) !important;
+}
+
+#px2ProviderRefresh{
+    background:linear-gradient(145deg,#00e676,#008f5a) !important;
+}
+
+#pxCleanProviderAdd{
+    background:linear-gradient(145deg,#26c96f,#087f5b) !important;
+}
+
+/* ===== REQUESTER SIDE COLORS ===== */
+
+#px2PartyLayout .px2-party-side:nth-child(2)
+.main-choice-btn{
+    background:linear-gradient(145deg,#42a5ff,#1565c0) !important;
+}
+
+#px2RequesterRefresh{
+    background:linear-gradient(145deg,#42a5f5,#1976d2) !important;
+}
+
+#pxCleanRequesterAdd{
+    background:linear-gradient(145deg,#64b5f6,#1565c0) !important;
+}
+
+/* ===== LOGOUT ===== */
+
+#pxFinalProviderLogout,
+#pxFinalRequesterLogout{
+    background:linear-gradient(145deg,#ff625e,#b71c1c) !important;
+}
+
+/* ===== FORCE VISIBLE ACTION BUTTONS ===== */
+
+#px2ProviderRefresh,
+#px2RequesterRefresh,
+#pxCleanProviderAdd,
+#pxCleanRequesterAdd,
+#pxFinalProviderLogout,
+#pxFinalRequesterLogout{
+    display:block !important;
+    visibility:visible !important;
+    opacity:1 !important;
+}
+
+/* ===== HIDE EVERYTHING BELOW FIRST SCREEN ===== */
+
+#requestForm,
+#myProducts,
+#productForm,
+#serviceSection,
+#serviceForm,
+#publishedProducts,
+#publishedServices,
+#openRequests,
+#requests,
+#myMatchesSection,
+#px2FullWorkArea{
+    display:none !important;
+}
+
+/* ===== MOBILE ===== */
+
+@media(max-width:600px){
+
+    #px2PartyLayout{
+        gap:8px !important;
+    }
+
+    #px2PartyLayout .px2-party-side{
+        gap:8px !important;
+    }
+
+    #px2PartyLayout button,
+    #px2PartyLayout .main-choice-btn,
+    #px2ProviderRefresh,
+    #px2RequesterRefresh,
+    #pxCleanProviderAdd,
+    #pxCleanRequesterAdd,
+    #pxFinalProviderLogout,
+    #pxFinalRequesterLogout{
+        min-height:68px !important;
+        padding:11px 6px !important;
+        font-size:12px !important;
+        border-radius:15px !important;
+    }
+
+    #px2PartyLayout .main-choice-btn{
+        min-height:100px !important;
+        font-size:13px !important;
+    }
+}
+</style>
+
+<script>
+(function(){
+
+function finalEightButtonFix(){
+
+    const layout=document.getElementById("px2PartyLayout");
+
+    if(!layout) return;
+
+    const sides=layout.querySelectorAll(".px2-party-side");
+
+    if(sides.length<2) return;
+
+    const providerSide=sides[0];
+    const requesterSide=sides[1];
+
+    const providerRefresh=
+        document.getElementById("px2ProviderRefresh");
+
+    const requesterRefresh=
+        document.getElementById("px2RequesterRefresh");
+
+    const providerAdd=
+        document.getElementById("pxCleanProviderAdd");
+
+    const requesterAdd=
+        document.getElementById("pxCleanRequesterAdd");
+
+    const providerLogout=
+        document.getElementById("pxFinalProviderLogout");
+
+    const requesterLogout=
+        document.getElementById("pxFinalRequesterLogout");
+
+    /* Provider: 4 ধারাবাহিক button */
+    [
+        providerRefresh,
+        providerAdd,
+        providerLogout
+    ].forEach(function(btn){
+        if(btn){
+            providerSide.appendChild(btn);
+            btn.classList.remove("px2-hidden");
+            btn.classList.remove("px-show");
+            btn.classList.remove("px-final-show");
+
+            btn.style.setProperty(
+                "display",
+                "block",
+                "important"
+            );
+
+            btn.style.setProperty(
+                "visibility",
+                "visible",
+                "important"
+            );
+
+            btn.style.setProperty(
+                "opacity",
+                "1",
+                "important"
+            );
+        }
+    });
+
+    /* Requester: 4 ধারাবাহিক button */
+    [
+        requesterRefresh,
+        requesterAdd,
+        requesterLogout
+    ].forEach(function(btn){
+        if(btn){
+            requesterSide.appendChild(btn);
+            btn.classList.remove("px2-hidden");
+            btn.classList.remove("px-show");
+            btn.classList.remove("px-final-show");
+
+            btn.style.setProperty(
+                "display",
+                "block",
+                "important"
+            );
+
+            btn.style.setProperty(
+                "visibility",
+                "visible",
+                "important"
+            );
+
+            btn.style.setProperty(
+                "opacity",
+                "1",
+                "important"
+            );
+        }
+    });
+
+    /* প্রথম স্ক্রিনের অতিরিক্ত লেখা */
+    const main=document.getElementById("mainChoiceButtons");
+
+    if(main){
+
+        main.querySelectorAll(":scope > h2, :scope > p")
+            .forEach(function(el){
+                el.style.setProperty(
+                    "display",
+                    "none",
+                    "important"
+                );
+            });
+    }
+
+    console.log(
+        "✅ PROYOJONX FINAL 8 BUTTON 3D UI READY"
+    );
+}
+
+/*
+ * Controllers আগে তৈরি হলে পরে আবার Fix করবে
+ */
+function run(){
+
+    finalEightButtonFix();
+
+    setTimeout(finalEightButtonFix,300);
+    setTimeout(finalEightButtonFix,800);
+    setTimeout(finalEightButtonFix,1500);
+}
+
+if(document.readyState==="loading"){
+    document.addEventListener("DOMContentLoaded",run);
+}else{
+    run();
+}
+
+})();
+</script>
+
+<!-- PROYOJONX_STEP4L_FINAL_8_BUTTON_3D_UI_END -->
+

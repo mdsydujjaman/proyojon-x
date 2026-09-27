@@ -1,0 +1,15 @@
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
+body{background:#f6fff6;color:#222}
+.container{max-width:1100px;margin:auto;padding:15px}
+.header{background:#0a8a2a;color:#fff;padding:12px 0;position:sticky;top:0;z-index:100}
+.header .container{display:flex;justify-content:space-between;align-items:center}
+.logo{font-size:26px;font-weight:bold}
+.header nav a{color:#fff;margin-left:15px;text-decoration:none;font-weight:bold}
+.hero{background:#0a8a2a;color:#fff;padding:60px 20px;text-align:center}
+.hero h2{font-size:32px;margin-bottom:10px}
+.btn{display:inline-block;margin-top:15px;background:#fff;color:#0a8a2a;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:bold}
+.products{padding:40px 0}
+.products h3{text-align:center;margin-bottom:20px;color:#0a8a2a;font-size:26px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:15px}
+.card{background:#fff;border:1px solid #d4ecd4;border-radius:10px;padding:20px;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,0.05)}
+footer{background:#0a5a1a;color:#fff;text-align:center;padding:20px;margin-top:30px}

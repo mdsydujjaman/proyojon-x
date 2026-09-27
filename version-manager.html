@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ProyojonX - Version Control</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+body{background:#fef9e7;min-height:100vh;padding:12px}
+.card{max-width:900px;margin:0 auto;background:#fff;border:6px solid #111;border-radius:24px;box-shadow:10px 10px 0 #111;padding:20px}
+h2{font-weight:900;font-size:26px;text-align:center}
+.hl{background:#ffe600;padding:4px 12px;border-radius:10px;border:3px solid #111;display:inline-block}
+.btn{border:4px solid #111;border-radius:16px;padding:12px 16px;font-weight:900;cursor:pointer;box-shadow:5px 5px 0 #111;margin:4px}
+.btn:active{transform:translate(2px,2px);box-shadow:3px 3px 0 #111}
+.back{background:#ff7a00;color:#fff}.forward{background:#00a651;color:#fff}.save{background:#ffe600}.restore{background:#111;color:#fff}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+@media(max-width:700px){.grid{grid-template-columns:1fr}}
+.ver{border:4px solid #111;border-radius:16px;padding:12px;box-shadow:4px 4px 0 #111;cursor:pointer;background:#fff}
+.ver.active{border-color:#00a651;background:#e8ffe8;box-shadow:6px 6px 0 #00a651}
+.ver.locked{border-color:#ff7a00;background:#fff3e0}
+.tag{display:inline-block;padding:2px 8px;border-radius:8px;font-size:12px;font-weight:900;border:2px solid #111;margin:2px}
+iframe{width:100%;height:500px;border:5px solid #111;border-radius:16px;box-shadow:6px 6px 0 #111;background:#fff}
+</style>
+</head>
+<body>
+<div class="card">
+<h2><span class="hl">🛡️ Version Control</span></h2>
+<p style="text-align:center;font-weight:700;color:#666;margin:8px 0">Back / Forward + Safe Restore System</p>
+
+<div style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:16px 0">
+<button class="btn back" onclick="goBack()">⏪ Back (আগের কাজ)</button>
+<button class="btn forward" onclick="goForward()">⏩ Forward (পরের কাজ)</button>
+<button class="btn save" onclick="saveCurrent()">💾 Save (নতুন সেভ)</button>
+<button class="btn restore" onclick="restoreSelected()">✅ Set as Current</button>
+</div>
+
+<div class="grid">
+<div>
+<h3 style="font-weight:900;margin:8px 0">📜 Versions (নিচে ট্যাপ করে Preview)</h3>
+<div id="list"></div>
+</div>
+<div>
+<h3 style="font-weight:900;margin:8px 0">👁️ Preview + Diff</h3>
+<iframe id="preview" src="registration.html"></iframe>
+<div id="info" style="margin-top:10px;padding:12px;border:3px dashed #111;border-radius:12px;font-weight:700;background:#fef9e7"></div>
+</div>
+</div>
+
+<div style="margin-top:16px;padding:14px;background:#111;color:#fff;border-radius:16px;font-family:monospace;font-size:13px">
+<p>💻 Termux Commands:</p>
+<p>./safe.sh save "OTP fixed" -- নতুন সেভ</p>
+<p>./safe.sh list -- সব version দেখো</p>
+<p>./safe.sh back -- আগের কাজে যাও</p>
+<p>./safe.sh forward -- পরের কাজে যাও</p>
+<p>./safe.sh restore v20250927_120101 -- নির্দিষ্ট version restore</p>
+</div>
+</div>
+
+<script>
+const versions=[
+ {id:'49f3e17',time:'2025-09-27 12:01',msg:'Location 2 buttons visible - BIG',file:'registration.html',locked:false,current:true},
+ {id:'69a05b5',time:'2025-09-27 12:01',msg:'SUPER FINAL Voice+Location',file:'versions/registration-FINAL-LOCKED-2025-09-27.html',locked:false,current:false},
+ {id:'9b3cece',time:'2025-09-27 11:54',msg:'Voice CLEAR Bangla+English',file:'registration.html',locked:false,current:false},
+ {id:'81a3bb4',time:'2025-09-27 11:46',msg:'FINAL 100% Logo+OTP6+Light3D',file:'versions/registration-FINAL-LOCKED-2025-09-27.html',locked:true,current:false},
+ {id:'ac30297',time:'2025-09-27 03:08',msg:'Initial 105K with logo',file:'registration.html',locked:false,current:false},
+];
+let idx=0;
+function render(){
+ const L=document.getElementById('list');
+ L.innerHTML=versions.map((v,i)=>`
+  <div class="ver ${i===idx?'active':''} ${v.locked?'locked':''}" onclick="selectVer(${i})">
+   <div style="display:flex;justify-content:space-between"><b>${v.id}</b><span class="tag" style="background:${v.current?'#b9f06a':'#ffe600'}">${v.current?'CURRENT':'v'+i}</span></div>
+   <div style="font-size:12px;color:#666;margin:4px 0">${v.time}</div>
+   <div style="font-weight:800;font-size:13px">${v.msg}</div>
+   <div style="margin-top:6px"><span class="tag">109K</span><span class="tag" style="background:${v.locked?'#ff7a00;color:#fff':''}">${v.locked?'🔒 LOCKED':''}</span></div>
+  </div>
+ `).join('');
+ selectVer(idx);
+}
+function selectVer(i){
+ idx=i;
+ document.querySelectorAll('.ver').forEach((el,j)=>el.classList.toggle('active',j===i));
+ const v=versions[i];
+ document.getElementById('preview').src=v.file+'?t='+Date.now();
+ document.getElementById('info').innerHTML=`<b>${v.id}</b><br>${v.time}<br>${v.msg}<br><br>File: ${v.file}<br><span style="color:${v.current?'green':'#ff7a00'}">${v.current?'✅ এখন LIVE এ আছে': '⏳ Preview দেখো, ভালো লাগলে Set as Current চাপো'}</span>`;
+ renderActive();
+}
+function renderActive(){document.querySelectorAll('.ver').forEach((el,j)=>el.classList.toggle('active',j===idx));}
+function goBack(){ if(idx<versions.length-1){idx++; selectVer(idx);} else alert('আর আগের version নাই!'); }
+function goForward(){ if(idx>0){idx--; selectVer(idx);} else alert('এটাই latest!'); }
+function saveCurrent(){ const m=prompt('এই version এর নাম দাও (যেমন: Dashboard added)'); if(m){ versions.unshift({id:'NEW_'+Date.now(),time:new Date().toLocaleString(),msg:m,file:'registration.html',locked:false,current:true}); idx=0; render(); alert('✅ Saved! এখন Termux এ ./safe.sh save "'+m+'" দাও'); } }
+function restoreSelected(){ const v=versions[idx]; if(confirm('এইটা কি CURRENT হিসেবে সেট করবে?\n'+v.msg)){ alert('✅ Termux এ করো:\ncp versions/'+v.id+'.html ./registration.html\ngit add . && git commit -m "Restore '+v.id+'" && git push'); } }
+render();
+</script>
+</body>
+</html>
