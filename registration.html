@@ -64,59 +64,58 @@ body{background:#fef9e7;min-height:100vh;padding-bottom:20px;display:flex;flex-d
 <p id="msg" class="msg"></p>
 </div>
 <script>
-// VOICE FIXED FOR ANDROID CHROME
+// CLEAR BANGLA + ENGLISH VOICE - 100% CLEAR
 let voiceOn=false, otpVerified=false, fail=0, cd=false;
-let voices=[]; let voiceReady=false;
-function loadVoices(){voices=speechSynthesis.getVoices(); if(voices.length>0) voiceReady=true;}
+let voices=[]; let bnVoice=null, enVoice=null;
+function loadVoices(){
+ voices=speechSynthesis.getVoices();
+ bnVoice=voices.find(v=>v.lang.toLowerCase().includes('bn')||v.name.toLowerCase().includes('bangla')||v.name.toLowerCase().includes('bengali'));
+ enVoice=voices.find(v=>v.lang.toLowerCase()==='en-us')||voices.find(v=>v.lang.toLowerCase().includes('en'))||voices[0];
+}
 if('speechSynthesis' in window){
  loadVoices();
  speechSynthesis.onvoiceschanged=loadVoices;
- setTimeout(loadVoices,500);
+ setTimeout(loadVoices,800);
 }
-function speak(t){
+function speakClear(bnText, enText){
  if(!voiceOn) return;
  try{
   speechSynthesis.cancel();
   if(speechSynthesis.paused) speechSynthesis.resume();
-  let u=new SpeechSynthesisUtterance(t);
-  u.lang='en-US'; // Android best compatibility, will speak Bangla text with en voice too
-  u.rate=0.9; u.volume=1; u.pitch=1;
-  if(voices.length>0){
-   let v=voices.find(x=>x.lang.includes('en-US'))||voices[0];
-   if(v) u.voice=v;
-  }
+  let useBN = !!bnVoice;
+  let txt = useBN ? bnText : enText;
+  let u=new SpeechSynthesisUtterance(txt);
+  u.volume=1; u.rate= useBN ? 0.85 : 0.92; u.pitch=1;
+  if(useBN){ u.lang='bn-BD'; u.voice=bnVoice; }else{ u.lang='en-US'; if(enVoice) u.voice=enVoice; }
   speechSynthesis.speak(u);
- }catch(e){console.log('Voice err',e);}
+ }catch(e){console.log(e);}
 }
 const vb=document.getElementById('voiceBtn');
 vb.onclick=()=>{
  voiceOn=!voiceOn;
- vb.textContent=voiceOn?'🔊 Voice: ON':'🔇 Voice: OFF';
+ vb.textContent=voiceOn?'🔊 বাংলা Voice: ON':'🔇 Voice: OFF';
  vb.style.background=voiceOn?'#b9f06a':'#fff';
- if(navigator.vibrate) navigator.vibrate(50);
+ if(navigator.vibrate) navigator.vibrate(60);
  if(voiceOn){
   loadVoices();
-  setTimeout(()=>speak('Voice on. Registration form ready'),100);
- }else{
-  speechSynthesis.cancel();
- }
+  setTimeout(()=>{
+   if(bnVoice){ speakClear('ভয়েস চালু হয়েছে, এখন সব কিছু স্পষ্ট বাংলায় বলবে',''); }
+   else{ speakClear('','Voice ON. For clear Bangla, install Google Text to Speech Bangla from Play Store. Now using clear English'); }
+  },300);
+ }else{ speechSynthesis.cancel(); }
 };
-
 const mobile=document.getElementById('mobile'), send=document.getElementById('sendOtp'), otpSec=document.getElementById('otpSec'), otps=document.querySelectorAll('.otp'), verify=document.getElementById('verifyOtp'), otpMsg=document.getElementById('otpMsg'), loc=document.getElementById('location'), locBtn=document.getElementById('locBtn'), reg=document.getElementById('register'), msg=document.getElementById('msg');
-
 mobile.addEventListener('input',()=>mobile.value=mobile.value.replace(/[^0-9]/g,'').slice(0,10));
-mobile.addEventListener('focus',()=>{ if(voiceOn) speak('Mobile number likhun'); });
-
+mobile.addEventListener('focus',()=>{ if(voiceOn) speakClear('মোবাইল নম্বর লিখুন','Enter mobile number'); });
 send.onclick=()=>{
  if(cd) return;
- if(!/^1[3-9][0-9]{8}$/.test(mobile.value)){msg.textContent='সঠিক ১০ ডিজিট দিন';msg.style.color='red'; if(voiceOn) speak('Sothik number din'); return;}
+ if(!/^1[3-9][0-9]{8}$/.test(mobile.value)){msg.textContent='সঠিক ১০ ডিজিট দিন';msg.style.color='red'; if(voiceOn) speakClear('সঠিক দশ ডিজিট নম্বর দিন','Enter correct 10 digit number'); return;}
  otpSec.classList.remove('hide');
- msg.textContent='OTP 123456 pathano holo'; msg.style.color='#0a8a2a';
- if(voiceOn) speak('OTP pathano hoyeche, 123456 likhun');
+ msg.textContent='OTP 123456 পাঠানো হলো'; msg.style.color='#0a8a2a';
+ if(voiceOn) speakClear('ওটিপি পাঠানো হয়েছে, এক দুই তিন চার পাঁচ ছয় লিখুন','OTP sent, enter 1 2 3 4 5 6');
  otps[0].focus();
- cd=true; send.disabled=true; let c=30; let tm=setInterval(()=>{c--; send.textContent='Abar ('+c+'s)'; if(c<=0){clearInterval(tm); cd=false; send.disabled=false; send.textContent='📲 OTP পাঠান';}},1000);
+ cd=true; send.disabled=true; let c=30; let tm=setInterval(()=>{c--; send.textContent='আবার ('+c+'s)'; if(c<=0){clearInterval(tm); cd=false; send.disabled=false; send.textContent='📲 OTP পাঠান';}}},1000);
 };
-
 otps.forEach((o,i)=>{
  o.addEventListener('input',()=>{
   if(o.value.length>1){let p=o.value.replace(/[^0-9]/g,'').slice(0,6).split(''); otps.forEach((x,j)=>x.value=p[j]||''); if(p.length===6) verify.focus(); return;}
@@ -124,23 +123,20 @@ otps.forEach((o,i)=>{
  });
  o.addEventListener('keydown',e=>{if(e.key==='Backspace'&&!o.value&&i>0) otps[i-1].focus();});
 });
-
 verify.onclick=()=>{
  let code=[...otps].map(x=>x.value).join('');
- if(code==='123456'){otpVerified=true; otpMsg.textContent='✅ Verified!'; otpMsg.style.color='#0a8a2a'; verify.textContent='✅ Verified'; verify.disabled=true; reg.disabled=false; msg.textContent='Ekhon registration somponno korun'; if(voiceOn) speak('OTP sothik');}
- else{fail++; otpMsg.textContent='❌ Bhul! 123456 din ('+fail+'/3)'; otpMsg.style.color='red'; if(voiceOn) speak('Bhul OTP'); if(fail>=3){verify.disabled=true; let c=60; let t=setInterval(()=>{c--; otpMsg.textContent='Lock '+c+'s'; if(c<=0){clearInterval(t); verify.disabled=false; fail=0;}},1000);}}
+ if(code==='123456'){otpVerified=true; otpMsg.textContent='✅ ভেরিফাইড!'; otpMsg.style.color='#0a8a2a'; verify.textContent='✅ ভেরিফাইড'; verify.disabled=true; reg.disabled=false; msg.textContent='এখন রেজিস্ট্রেশন সম্পন্ন করুন'; if(voiceOn) speakClear('ওটিপি সঠিক, ভেরিফাইড হয়েছে','OTP correct, verified');}
+ else{fail++; otpMsg.textContent='❌ ভুল! 123456 দিন ('+fail+'/3)'; otpMsg.style.color='red'; if(voiceOn) speakClear('ভুল ওটিপি','Wrong OTP'); if(fail>=3){verify.disabled=true; let c=60; let t=setInterval(()=>{c--; otpMsg.textContent='লক '+c+'s'; if(c<=0){clearInterval(t); verify.disabled=false; fail=0;}}},1000);}}
 };
-
 locBtn.onclick=()=>{
- if(voiceOn) speak('Location newa hocche');
- if(navigator.geolocation){navigator.geolocation.getCurrentPosition(p=>{loc.value=p.coords.latitude.toFixed(4)+','+p.coords.longitude.toFixed(4); msg.textContent='Location pawa geche'; if(voiceOn) speak('Location pawa geche');},()=>{loc.value='Mymensingh';});}else loc.value='Mymensingh';
+ if(voiceOn) speakClear('লোকেশন নেওয়া হচ্ছে','Getting location');
+ if(navigator.geolocation){navigator.geolocation.getCurrentPosition(p=>{loc.value=p.coords.latitude.toFixed(4)+','+p.coords.longitude.toFixed(4); msg.textContent='লোকেশন পাওয়া গেছে'; if(voiceOn) speakClear('লোকেশন পাওয়া গেছে','Location found');},()=>{loc.value='Mymensingh';});}else loc.value='Mymensingh';
 };
-
 reg.onclick=()=>{
- if(!otpVerified){msg.textContent='Age OTP confirm korun!'; msg.style.color='red'; if(voiceOn) speak('OTP confirm korun'); return;}
- msg.textContent='✅ Sagotom ProyojonX e!'; msg.style.color='#0a8a2a'; reg.textContent='Sofol ✅'; reg.disabled=true;
- if(voiceOn) speak('Registration sofol');
- setTimeout(()=>location.href='index.html',1200);
+ if(!otpVerified){msg.textContent='আগে OTP কনফার্ম করুন!'; msg.style.color='red'; if(voiceOn) speakClear('আগে ওটিপি কনফার্ম করুন','Please confirm OTP first'); return;}
+ msg.textContent='✅ স্বাগতম ProyojonX এ!'; msg.style.color='#0a8a2a'; reg.textContent='সফল ✅'; reg.disabled=true;
+ if(voiceOn) speakClear('রেজিস্ট্রেশন সফল হয়েছে, স্বাগতম','Registration successful, welcome to ProyojonX');
+ setTimeout(()=>location.href='index.html',1500);
 };
 </script>
 </body>
